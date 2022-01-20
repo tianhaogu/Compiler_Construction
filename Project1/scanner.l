@@ -56,10 +56,58 @@ static void DoBeforeEachAction();
   */
 
 
+VOID (void)
+INT (int)
+DOUBLE (double)
+BOOL (bool)
+STRING (string)
+CLASS (class)
+INTERFACE (interface)
+NULL (null)
+THIS (this)
+EXTENDS (extends)
+IMPLEMENTS (implements)
+FOR (for)
+WHILE (while)
+IF (if)
+ELSE (else)
+RETURN (return)
+BREAK (break)
+CONTINUE (continue)
+NEW (New)
+NEWARRAY (NewArray)
+
+IDENTIFIER ([a-zA-Z][a-zA-Z_]*)
+BOOLCONST (true|false)
+DEC_DIGIT ([0-9])
+HEX_DIGIT ([0-9a-fA-F])
+DEC_INT ({DIGIT}+)
+HEX_INT (0[x|X]{HEX_DIGIT}+)
+EXPONENT ([e|E][+]?{DEC_INT})
+DOUBLE ({DEC_INT}\.{DEC_DIGIT}*{EXPONENT}?)
+STRING (\"[^\n\"]*\")
+OPERATOR ([+-*/%<=>!&|;,.\[](){}])
+
+
 %%             /* BEGIN RULES SECTION */
  /* All patterns and actions should be placed between the start and stop
   * %% markers which delimit the Rules section. 
   */
+
+
+{VOID} {return T_Void;}
+{INT} {return T_Int;}
+{DOUBLE} {return T_Double;}
+{BOOL} {return T_Bool;}
+{STRING} {return T_String;}
+{CLASS} {return T_Class;}
+{INTERFACE} {return T_Interface;}
+{NULL} {return T_Null;}
+{THIS} {return T_This;}
+{EXTENDS} {return T_Extends;}
+{IMPLEMENTS} {return T_Implements;}
+{FOR} {return T_For;}
+{WHILE} {return T_While;}
 
 
 %%
