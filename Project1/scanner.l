@@ -73,7 +73,6 @@ IF (if)
 ELSE (else)
 RETURN (return)
 BREAK (break)
-CONTINUE (continue)
 NEW (New)
 NEWARRAY (NewArray)
 
@@ -81,7 +80,7 @@ IDENTIFIER ([a-zA-Z][0-9a-zA-Z_]*)
 BOOLCONST (true|false)
 DEC_DIGIT ([0-9])
 HEX_DIGIT ([0-9a-fA-F])
-DEC_INT ({DIGIT}+)
+DEC_INT ({DEC_DIGIT}+)
 HEX_INT (0[x|X]{HEX_DIGIT}+)
 INTCONST ({DEC_INT}|{HEX_INT})
 EXPONENT ([e|E][+]?{DEC_INT})
@@ -92,7 +91,7 @@ EQ (==)
 GEQ (>=)
 NEQ (!=)
 AND (&&)
-OR (||)
+OR (\|\|)
 OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
 
 
@@ -119,14 +118,19 @@ OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
 {ELSE} {return T_Else;}
 {RETURN} {return T_Return;}
 {BREAK} {return T_Break;}
-{CONTINUE} {return T_Continue;}
 {NEW} {return T_New;}
 {NEWARRAY} {return T_NewArray;}
-{IDENTIFIER} {return T_Identifier}
-{STRINGCONST} {return T_String}
-{INTCONST} {return T_IntConstant}
-{DOUBLECONST} {return T_DoubleConstant}
-{BOOLCONST} {return T_BoolConstant}
+{IDENTIFIER} {return T_Identifier;}
+{STRINGCONST} {return T_String;}
+{INTCONST} {return T_IntConstant;}
+{DOUBLECONST} {return T_DoubleConstant;}
+{BOOLCONST} {return T_BoolConstant;}
+{LEQ} {return T_LessEqual;}
+{GEQ} {return T_GreaterEqual;}
+{EQ} {return T_Equal;}
+{NEQ} {return T_NotEqual;}
+{AND} {return T_And;}
+{OR} {return T_Or;}
 
 
 %%
