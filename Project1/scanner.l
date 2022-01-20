@@ -115,6 +115,13 @@ OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
 {IMPLEMENTS} {return T_Implements;}
 {FOR} {return T_For;}
 {WHILE} {return T_While;}
+{IF} {return T_If;}
+{ELSE} {return T_Else;}
+{RETURN} {return T_Return;}
+{BREAK} {return T_Break;}
+{CONTINUE} {return T_Continue;}
+{NEW} {return T_New;}
+{NEWARRAY} {return T_NewArray;}
 
 
 %%
