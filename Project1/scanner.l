@@ -83,10 +83,10 @@ DEC_DIGIT ([0-9])
 HEX_DIGIT ([0-9a-fA-F])
 DEC_INT ({DIGIT}+)
 HEX_INT (0[x|X]{HEX_DIGIT}+)
-INTEGER ({DEC_INT}|{HEX_INT})
+INTCONST ({DEC_INT}|{HEX_INT})
 EXPONENT ([e|E][+]?{DEC_INT})
-DOUBLE ({DEC_INT}\.{DEC_DIGIT}*{EXPONENT}?)
-STRING (\"[^\n\"]*\")
+DOUBLECONST ({DEC_INT}\.{DEC_DIGIT}*{EXPONENT}?)
+STRINGCONST (\"[^\n\"]*\")
 LEQ (<=)
 EQ (==)
 GEQ (>=)
@@ -122,6 +122,11 @@ OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
 {CONTINUE} {return T_Continue;}
 {NEW} {return T_New;}
 {NEWARRAY} {return T_NewArray;}
+{IDENTIFIER} {return T_Identifier}
+{STRINGCONST} {return T_String}
+{INTCONST} {return T_IntConstant}
+{DOUBLECONST} {return T_DoubleConstant}
+{BOOLCONST} {return T_BoolConstant}
 
 
 %%
