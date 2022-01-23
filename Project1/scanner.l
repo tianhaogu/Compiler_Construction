@@ -33,6 +33,9 @@ YYSTYPE yylval;  // manually declared for pp1, later Yacc provides
  */
 struct yyltype yylloc; // manually dclared for pp1, later Yacc provides
 
+int currLine = 1;
+int currCol = 1;
+
 /* Macro: YY_USER_ACTION 
  * ---------------------
  * This flex built-in macro can be defined to provide an action which is
@@ -76,8 +79,8 @@ BREAK (break)
 NEW (New)
 NEWARRAY (NewArray)
 
-IDENTIFIER ([a-zA-Z][0-9a-zA-Z_]*)
 BOOLCONST (true|false)
+IDENTIFIER ([a-zA-Z][0-9a-zA-Z_]*)
 DEC_DIGIT ([0-9])
 HEX_DIGIT ([0-9a-fA-F])
 DEC_INT ({DEC_DIGIT}+)
@@ -86,13 +89,19 @@ INTCONST ({DEC_INT}|{HEX_INT})
 EXPONENT ([e|E][+]?{DEC_INT})
 DOUBLECONST ({DEC_INT}\.{DEC_DIGIT}*{EXPONENT}?)
 STRINGCONST (\"[^\n\"]*\")
+
 LEQ (<=)
 EQ (==)
 GEQ (>=)
 NEQ (!=)
 AND (&&)
 OR (\|\|)
-OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
+OPERATOR ([-+*/%<=>!;,.[\](){}])
+
+NEWLINE (\n)
+STRINGINCONST (\"[^\n\"]*{NEWLINE})
+SPACE ([ ]+)
+NOMATCH (.)
 
 
 %%             /* BEGIN RULES SECTION */
@@ -120,17 +129,73 @@ OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
 {BREAK} {return T_Break;}
 {NEW} {return T_New;}
 {NEWARRAY} {return T_NewArray;}
-{IDENTIFIER} {return T_Identifier;}
-{STRINGCONST} {return T_String;}
-{INTCONST} {return T_IntConstant;}
-{DOUBLECONST} {return T_DoubleConstant;}
-{BOOLCONST} {return T_BoolConstant;}
+
+{BOOLCONST} {
+    yylval.boolConstant = (strlen(yytext) == 4) ? true : false;
+    return T_BoolConstant;
+}
+{INTCONST} {
+    bool check_dec = true;
+    for (int i = 0; i < strlen(yytext); i++) {
+        if (isdigit(yytext[i]) == 0) {
+            check_dec = false;
+            break;
+        }
+    }
+    yylval.integerConstant = (check_dec == true) ? strtol(yytext, NULL, 10) : strtol(yytext, NULL, 16);
+    return T_IntConstant;
+}
+{DOUBLECONST} {
+    yylval.doubleConstant = atof(yytext);
+    return T_DoubleConstant;
+}
+{STRINGCONST} {
+    yylval.stringConstant = yytext;
+    return T_StringConstant;
+}
+{IDENTIFIER} {
+    if (strlen(yytext) > MaxIdentLen) {
+        ReportError::LongIdentifier(&yylloc, yytext);
+    }
+    int i = 0;
+    int minLen = (strlen(yytext) < MaxIdentLen) ? strlen(yytext) : MaxIdentLen;
+    while (i < minLen) {
+        yylval.identifier[i] = yytext[i];
+        i += 1;
+    }
+    while (i < MaxIdentLen + 1) {
+        yylval.identifier[i] = '\0';
+        i += 1;
+    }
+    return T_Identifier;
+}
+
 {LEQ} {return T_LessEqual;}
 {GEQ} {return T_GreaterEqual;}
 {EQ} {return T_Equal;}
 {NEQ} {return T_NotEqual;}
 {AND} {return T_And;}
 {OR} {return T_Or;}
+{OPERATOR} {return yytext[0];}
+
+{NEWLINE} {
+    currLine += 1;
+    currCol = 1;
+}
+{STRINGINCONST} {
+    string truncate = "";
+    for (int i = 0; i < strlen(yytext); i++) {
+        if (yytext[i] == '\n') {
+            currLine += 1;
+            continue;
+        }
+        truncate += yytext[i];
+    }
+    currCol = 1;
+    ReportError::UntermString(&yylloc, truncate.c_str());
+}
+{SPACE} {}
+{NOMATCH} {ReportError::UnrecogChar(&yylloc, yytext[0]);}
 
 
 %%
@@ -153,8 +218,7 @@ OPERATOR ([+-*/%<=>!&|;,.\[](){}]|{LEQ}|{EQ}|{GEQ}|{NEQ}|{AND}|{OR})
  * be helpful when debugging your scanner. Please be sure the variable is
  * set to false when submitting your final version.
  */
-void InitScanner()
-{
+void InitScanner() {
     PrintDebug("lex", "Initializing scanner");
     yy_flex_debug = false;
 }
@@ -165,6 +229,10 @@ void InitScanner()
  * This function is installed as the YY_USER_ACTION. This is a place
  * to group code common to all actions.
  */
-static void DoBeforeEachAction()
-{
+static void DoBeforeEachAction() {
+    yylloc.first_line = currLine;
+    yylloc.last_line = currLine;
+    yylloc.first_column = currCol;
+    yylloc.last_column = currCol + strlen(yytext) - 1;
+    currCol += strlen(yytext);
 }
