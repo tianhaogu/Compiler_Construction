@@ -142,7 +142,7 @@ NOMATCH (.)
             break;
         }
     }
-    yylval.integerConstant = (check_dec == true) ? strtol(yytext, NULL, 10) : strtol(yytext, NULL, 16);
+    yylval.integerConstant = check_dec ? strtol(yytext, NULL, 10) : strtol(yytext, NULL, 16);
     return T_IntConstant;
 }
 {DOUBLECONST} {
@@ -157,15 +157,8 @@ NOMATCH (.)
     if (strlen(yytext) > MaxIdentLen) {
         ReportError::LongIdentifier(&yylloc, yytext);
     }
-    int i = 0;
-    int minLen = (strlen(yytext) < MaxIdentLen) ? strlen(yytext) : MaxIdentLen;
-    while (i < minLen) {
-        yylval.identifier[i] = yytext[i];
-        i += 1;
-    }
-    while (i < MaxIdentLen + 1) {
-        yylval.identifier[i] = '\0';
-        i += 1;
+    for (int i = 0; i < MaxIdentLen; ++i) {
+        yylval.identifier[i] = (i < strlen(yytext)) ? yytext[i] : '\0';
     }
     return T_Identifier;
 }
