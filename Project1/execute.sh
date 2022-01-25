@@ -37,3 +37,15 @@ diff samples/number.out samples/test_number.out
 
 ./dcc < samples/program2.decaf > samples/test_program2.out 2>&1
 diff samples/program2.out samples/test_program2.out
+
+./dcc < samples/badpre.frag > samples/test_badpre.out 2>&1
+diff samples/badpre.out samples/test_badpre.out
+
+./dcc < samples/comment.frag > samples/test_comment.out 2>&1
+diff samples/comment.out samples/test_comment.out
+
+./dcc < samples/define.frag > samples/test_define.out 2>&1
+diff samples/define.out samples/test_define.out
+
+./dcc < samples/program3.decaf > samples/test_program3.out 2>&1
+diff samples/program3.out samples/test_program3.out
