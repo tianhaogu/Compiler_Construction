@@ -178,7 +178,60 @@ Decl      :    VarDecl               {   }
           |    InterfaceDecl         {   } 
           ;
 
-VarDecl   :    Type T_Identifier ';'        { $$ = new VarDecl(); }
+VarDecl   :    Type T_Identifier ';'        {
+                                                Idetifier *identifier = new Idetifier(@2, $2);
+                                                $$ = new VarDecl(identifier, $1);
+                                            }
+          ;
+
+FnDecl    :    T_void T_Identifier '(' VarDeclList ')' StmtBlock        {
+                                                                            Identifier *identifier = new Identifier(@2, $2);
+                                                                            ($$ = new FnDecl(identifier, $1, $4))-> SetFunctionBody($6);
+                                                                        }
+          |    Type T_Identifier '(' VarDeclList ')' StmtBlock        {
+                                                                          Identifier *identifier = new Identifier(@2, $2);
+                                                                          ($$ = new FnDecl(identifier, $1, $4))-> SetFunctionBody($6);
+                                                                      }
+          ;
+
+ClassDecl    :    T_Class T_Identifier T_Extends T_Identifier        {}
+             |    T_Class T_Identifier T_Implements T_Identifier        {}
+             ;
+
+InterfaceDecl    :    T_Interface T_Identifier        {
+                                                          Identifier *identifier = new Identifier(@2, $2);
+                                                          $$ = new InterfaceDecl(identifier, );
+                                                      }
+                 ;
+
+Stmt    :    StmtBlock        {   }
+        |    IfStmt        {   }
+        |    ForStmt        {   }
+        |    WhileStmt        {   }
+        |    PrintStmt        {   }
+        |    ReturnStmt        {   }
+        |    BreakStmt        {   }
+        |    SwitchStmt        {   }
+        ;
+
+IfStmt    :    T_If '(' Expr ')' StmtBlock        {   }
+          |    T_If '(' Expr ')' StmtBlock T_Else StmtBlock        {   }
+          ;
+
+ForStmt    :    T_For '(' XXX ';' YYY ';' ZZZ ')' StmtBlock        {   }
+           ;
+
+WhileStmt    :    T_While '(' Expr ')' StmtBlock        {   }
+             ;
+
+PrintStmt    :    T_Print '(' ExprList ')' ';'        {   }
+             ;
+
+ReturnStmt    :    T_Return ';'        {   }
+              |    T_Return Expr ';'        {   }
+              ;
+
+BreakStmt    :    T_Break ';'        {   }
 
 
 %%
