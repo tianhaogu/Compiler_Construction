@@ -39,6 +39,7 @@ void yyerror(const char *msg); // standard error-handling routine
  *      attributes to your non-terminal symbols.
  */
 %union {
+    Program *program;
     int integerConstant;
     bool boolConstant;
     char *stringConstant;
@@ -46,6 +47,39 @@ void yyerror(const char *msg); // standard error-handling routine
     char identifier[MaxIdentLen+1]; // +1 for terminating null
     Decl *decl;
     List<Decl*> *declList;
+    VarDecl *vardecl;
+    List<VarDecl*> vardeclList;
+    FnDecl *fndecl;
+    ClassDecl *classdecl;
+    InterfaceDecl *interfacedecl;
+    Type *type;
+    NamedType *namedtype;
+    Stmt *stmt;
+    List<Stmt*> stmtList;
+    StmtBlock *stmtblock;
+    IfStmt *ifstmt;
+    ForStmt *forstmt;
+    WhileStmt *whilestmt;
+    PrintStmt *printstmt;
+    ReturnStmt *returnstmt;
+    BreakStmt *breakstmt;
+    SwitchStmt *switchstmt;
+    Expr *expr;
+    List<Expr*> *exprList;
+    AssignExpr *assignexpr;
+    LogicalExpr *logicalexpr;
+    PostfixExpr *postfixexpr;
+    EqualityExpr *equalityexpr;
+    ArithmeticExpr *arithmeticexpr;
+    RelationalExpr *relationalexpr;
+    ReadIntegerExpr *readintegerexpr;
+    NewArrayExpr *newarrayexpr;
+    FieldAccess *fieldaccess;
+    ArrayAccess *arrayaccess;
+    NullConstant *nullconstant;
+    Default *default;
+    Call *call;
+    Case *case;
 }
 
 
@@ -81,8 +115,39 @@ void yyerror(const char *msg); // standard error-handling routine
  * of the union named "declList" which is of type List<Decl*>.
  * pp2: You'll need to add many of these of your own.
  */
-%type <declList>  DeclList 
-%type <decl>      Decl
+%type <program>           Program
+%type <declList>          DeclList 
+%type <decl>              Decl
+%type <vardecl>           VarDecl
+%type <vardeclList>       VarDeclList
+%type <fndecl>            FnDecl
+%type <classdecl>         ClassDecl
+%type <interfacedecl>     InterfaceDecl
+%type <type>              Type
+%type <namedtype>         NamedType
+%type <stmt>              Stmt
+%type <stmtList>          StmtList
+%type <stmtblock>         StmtBlock
+%type <ifstmt>            IfStmt
+%type <forstmt>           ForStmt
+%type <whilestmt>         WhileStmt
+%type <printstmt>         PrintStmt
+%type <returnstmt>        ReturnStmt
+%type <breakstmt>         BreakStmt
+%type <switchstmt>        SwitchStmt
+%type <expr>              Expr
+%type <exprList>          ExprList
+%type <assignexpr>        AssignExpr
+%type <logicalexpr>       LogicalExpr
+%type <postfixexpr>       PostfixExpr
+%type <equalityexpr>      EqualityExpr
+%type <arithmeticexpr>    ArithmeticExpr
+%type <relationalexpr>    RelationalExpr
+%type <readintegerexpr>   ReadIntegerExpr
+%type <newarrayexpr>      NewArrayExpr
+%type <fieldaccess>       FieldAccess
+%type <arrayaccess>       ArrayAccess
+
 
 %%
 /* Rules
@@ -103,13 +168,17 @@ Program   :    DeclList            {
                                     }
           ;
 
-DeclList  :    DeclList Decl        { ($$=$1)->Append($2); }
-          |    Decl                 { ($$ = new List<Decl*>)->Append($1); }
+DeclList  :    DeclList Decl        { ($$=$1)-> Append($2); }
+          |    Decl                 { ($$ = new List<Decl*>)-> Append($1); }
           ;
 
-Decl      :    T_Void               { /* pp2: replace with correct rules  */ } 
+Decl      :    VarDecl               {   }
+          |    FnDecl                {   }
+          |    ClassDecl             {   }
+          |    InterfaceDecl         {   } 
           ;
-          
+
+VarDecl   :    Type T_Identifier ';'        { $$ = new VarDecl(); }
 
 
 %%

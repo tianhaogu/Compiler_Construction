@@ -35,7 +35,7 @@ void Node::Print(int indentLevel, const char *label) {
         printf("%*s", numSpaces, "");
     printf("%*s%s%s: ", indentLevel*numSpaces, "", 
            label? label : "", GetPrintNameForNode());
-   PrintChildren(indentLevel);
+    PrintChildren(indentLevel);
 } 
 	 
 Identifier::Identifier(yyltype loc, const char *n) : Node(loc) {
