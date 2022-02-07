@@ -47,7 +47,7 @@ void yyerror(const char *msg); // standard error-handling routine
     char identifier[MaxIdentLen+1]; // +1 for terminating null
     Decl *decl;
     List<Decl*> *declList;
-    VarDecl *var;
+    VarDecl *vardecl;
     Type *type;
     FnDecl *fndecl;
     List<VarDecl*> *varList;
@@ -122,8 +122,8 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <program>           Program
 %type <declList>          DeclList 
 %type <decl>              Decl
-%type <var>               VarDecl
-%type <var>               Var
+%type <vardecl>           VarDecl
+%type <vardecl>           Var
 %type <type>              Type
 %type <fndecl>            FnDecl
 %type <varList>           Formals
@@ -194,16 +194,16 @@ DeclList  :    DeclList Decl        { ($$=$1)-> Append($2); }
           |    Decl                 { ($$ = new List<Decl*>)-> Append($1); }
           ;
 
-Decl      :    VarDecl               {$$=$1;}
-          |    FnDecl                {$$=$1;}
-          |    ClassDecl             {$$=$1;}
-          |    InterfaceDecl         {$$=$1;} 
+Decl      :    VarDecl               { $$=$1; }
+          |    FnDecl                { $$=$1; }
+          |    ClassDecl             { $$=$1; }
+          |    InterfaceDecl         { $$=$1; } 
           ;
 
-VarDecl    :    Var ';'    { $$=$1; }
+VarDecl    :    Var ';'   { $$=$1; }
            ;
 
-Var   :    Type T_Identifier ';'    {
+Var   :    Type T_Identifier    {
           Identifier *identifier = new Identifier(@2, $2);
           $$ = new VarDecl(identifier, $1);
       }
@@ -222,17 +222,19 @@ Type    :    T_Int    { $$ = Type::intType; }
 
 FnDecl    :    T_Void T_Identifier '(' Formals ')' StmtBlock    {
               Identifier *identifier = new Identifier(@2, $2);
-              Type *type = Type::voidType;
-              ($$ = new FnDecl(identifier, type, $4))-> SetFunctionBody($6);
+              Type *type_ = Type::voidType;
+              $$ = new FnDecl(identifier, type_, $4);
+              $$-> SetFunctionBody($6);
           }
           |    Type T_Identifier '(' Formals ')' StmtBlock    {
               Identifier *identifier = new Identifier(@2, $2);
-              ($$ = new FnDecl(identifier, $1, $4))-> SetFunctionBody($6);
+              $$ = new FnDecl(identifier, $1, $4);
+              $$-> SetFunctionBody($6);
           }
           ;
 
 Formals    :    VarList    { $$=$1; }
-           |        {   }
+           |        { $$ = new List<VarDecl*>; }
            ;
 
 VarList    :    VarList ',' Var    { ($$=$1)-> Append($3); }
@@ -241,13 +243,15 @@ VarList    :    VarList ',' Var    { ($$=$1)-> Append($3); }
 
 ClassDecl    :    T_Class T_Identifier '{' FieldList '}'    {
                  Identifier *identifier = new Identifier(@2, $2);
-                 $$ = new ClassDecl(identifier, NULL, NULL, $4);
+                 List<NamedType*> *impList = new List<NamedType*>;
+                 $$ = new ClassDecl(identifier, NULL, impList, $4);
              }
              |    T_Class T_Identifier T_Extends T_Identifier '{' FieldList '}'    {
                  Identifier *identifier = new Identifier(@2, $2);
                  Identifier *ext_ident = new Identifier(@4, $4);
                  NamedType *extends = new NamedType(ext_ident);
-                 $$ = new ClassDecl(identifier, extends, NULL, $6);
+                 List<NamedType*> *impList = new List<NamedType*>;
+                 $$ = new ClassDecl(identifier, extends, impList, $6);
              }
              |    T_Class T_Identifier T_Implements IdentifierList '{' FieldList '}'    {
                  Identifier *identifier = new Identifier(@2, $2);
@@ -273,7 +277,7 @@ IdentifierList    :    IdentifierList ',' T_Identifier    {
                   }
                   ;
 
-FieldList    :        {   }
+FieldList    :        { $$ = new List<Decl*>; }
              |    FieldList Field    { ($$=$1)-> Append($2); }
              ;
 
@@ -281,13 +285,13 @@ Field    :    VarDecl    { $$=$1; }
          |    FnDecl    { $$=$1; }
          ;
 
-InterfaceDecl    :    T_Interface T_Identifier ProtoTypeList    {
+InterfaceDecl    :    T_Interface T_Identifier '{' ProtoTypeList '}'    {
                      Identifier *identifier = new Identifier(@2, $2);
-                     $$ = new InterfaceDecl(identifier, $3);
+                     $$ = new InterfaceDecl(identifier, $4);
                  }
                  ;
 
-ProtoTypeList    :        {   }
+ProtoTypeList    :        { $$ = new List<Decl*>; }
                  |    ProtoTypeList ProtoType    { ($$=$1)-> Append($2); }
                  ;
 
@@ -313,20 +317,15 @@ StmtList    :        { $$ = new List<Stmt*>; }
             |    StmtList Stmt    { ($$=$1)-> Append($2); }        
             ;
 
-Stmt    :    ExprBrack    { $$=$1; }
+Stmt    :    ExprBrack ';'    { $$=$1; }
         |    IfStmt    { $$=$1; }
         |    ForStmt    { $$=$1; }
         |    WhileStmt    { $$=$1; }
         |    ReturnStmt    { $$=$1; }
         |    BreakStmt    { $$=$1; }
         |    PrintStmt    { $$=$1; }
-        //|    SwitchStmt    { $$=$1; }
         |    StmtBlock    { $$=$1; }
         ;
-
-ExprBrack    :        { $$ = new EmptyExpr(); }
-             |    Expr    { $$ = $1; }
-             ;
 
 IfStmt    :    T_If '(' Expr ')' Stmt    { $$ = new IfStmt($3, $5, NULL); }
           |    T_If '(' Expr ')' Stmt T_Else Stmt    { $$ = new IfStmt($3, $5, $7); }
@@ -338,8 +337,12 @@ ForStmt    :    T_For '(' ExprBrack ';' Expr ';' ExprBrack ')' Stmt    { $$ = ne
 WhileStmt    :    T_While '(' Expr ')' Stmt    { $$ = new WhileStmt($3, $5); }
              ;
 
-ReturnStmt    :    T_Return ExprBrack ';'    { $$ = new ReturnStmt(@2, $2); }
+ReturnStmt    :    T_Return ExprBrack ';'    { $$ = new ReturnStmt(Join(@1, @2), $2); }
               ;
+
+ExprBrack    :    Expr    { $$=$1; }
+             |        { $$ = new EmptyExpr(); }
+             ;
 
 BreakStmt    :    T_Break ';'    { $$ = new BreakStmt(@1); }
              ;
@@ -347,7 +350,7 @@ BreakStmt    :    T_Break ';'    { $$ = new BreakStmt(@1); }
 PrintStmt    :    T_Print '(' ExprList ')' ';'    { $$ = new PrintStmt($3); }
              ;
 
-ExprList    :    ExprList Expr    { ($$=$1)-> Append($2); }
+ExprList    :    ExprList ',' Expr    { ($$=$1)-> Append($3); }
             |    Expr    { ($$ = new List<Expr*>)-> Append($1); }
             ;
 
@@ -364,14 +367,13 @@ ExprList    :    ExprList Expr    { ($$=$1)-> Append($2); }
 //DefaultBrack    :    T_Default StmtList    {   }
 //                ;
 
-Expr    :    LValue    { $$=$1; }
+Expr    :    AssignExpr    { $$=$1; }
+        |    LValue    { $$=$1; }
         |    Constant    { $$=$1; }
         |    T_This    { $$ = new This(@1); }
         |    Call    { $$=$1; }
         |    '(' Expr ')'    { $$=$2; }
-        |    AssignExpr    { $$=$1; }
         |    LogicalExpr    { $$=$1; }
-        //|    PostfixExpr    { $$=$1; }
         |    EqualityExpr    { $$=$1; }
         |    ArithmeticExpr    { $$=$1; }
         |    RelationalExpr    { $$=$1; }
@@ -381,9 +383,15 @@ Expr    :    LValue    { $$=$1; }
         |    NewArrayExpr    { $$=$1; }
         ;
 
+AssignExpr    :    LValue '=' Expr    {
+                  Operator *equal = new Operator(@2, "=");
+                  $$ = new AssignExpr($1, equal, $3);
+              }
+              ;
+
 LValue    :    T_Identifier    {
               Identifier *identifier = new Identifier(@1, $1);
-              $$ = new FieldAccess(new EmptyExpr(), identifier);
+              $$ = new FieldAccess(NULL, identifier);
           }
           |    Expr '.' T_Identifier    {
               Identifier *identifier = new Identifier(@3, $3);
@@ -414,12 +422,6 @@ Call    :    T_Identifier '(' Actuals ')'    {
 Actuals    :    ExprList    { $$=$1; }
            |                { $$ = new List<Expr*>; }
            ;
-
-AssignExpr    :    LValue '=' Expr    {
-                  Operator *equal = new Operator(@2, "=");
-                  $$ = new AssignExpr($1, equal, $3);
-              }
-              ;
 
 LogicalExpr    :    Expr T_And Expr    {
                    Operator *and_ = new Operator(@2, "&&");
