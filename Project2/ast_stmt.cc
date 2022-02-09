@@ -36,45 +36,43 @@ void IntConst::PrintChildren(int indentLevel) {
     printf("%d", value);
 }
   
-CaseExpr::CaseExpr(IntConst *t, Stmt *b) {
-    Assert(t != NULL && b != NULL);
+CaseExpr::CaseExpr(IntConst *t, List<Stmt*> *s) {
+    Assert(t != NULL && s != NULL);
     (test=t)->SetParent(this); 
-    (body=b)->SetParent(this);
+    (stmts=s)->SetParentAll(this);
 }
 
 void CaseExpr::PrintChildren(int indentLevel) {
     test->Print(indentLevel+1);
-    body->Print(indentLevel+1);
+    stmts->PrintAll(indentLevel+1);
 }
 
-DefaultBrack::DefaultBrack(Stmt *b) {
-    Assert(b != NULL);
-    (body=b)->SetParent(this);
+DefaultBrack::DefaultBrack(List<Stmt *> *s) {
+    Assert(s != NULL);
+    (stmts=s)->SetParentAll(this);
 }
 
 void DefaultBrack::PrintChildren(int indentLevel) {
-    body->Print(indentLevel+1);
-}
-
-EmptyDefaultBrack::EmptyDefaultBrack(Stmt *b) : DefaultBrack(b) {
-    return;
-}
-
-void EmptyDefaultBrack::PrintChildren(int indentLevel) {
-    return;
+    stmts->PrintAll(indentLevel+1);
 }
 
 SwitchStmt::SwitchStmt(Expr *t, List<CaseExpr*> *s, DefaultBrack *d) {
-    Assert(t != NULL && s != NULL && d != NULL);
+    Assert(t != NULL && s != NULL);
     (test=t)->SetParent(this); 
     (stmts=s)->SetParentAll(this);
-    (defaultBody=d)->SetParent(this);
+    if (d != NULL) {
+        (defaultBody=d)->SetParent(this);
+    } else {
+        defaultBody = NULL;
+    }
 }
 
 void SwitchStmt::PrintChildren(int indentLevel) {
-    test->Print(indentLevel+1, "(test) ");
+    test->Print(indentLevel+1);
     stmts->PrintAll(indentLevel+1);
-    defaultBody->Print(indentLevel+1);
+    if (defaultBody != NULL) {
+        defaultBody->Print(indentLevel+1);
+    }
 }
 
 ConditionalStmt::ConditionalStmt(Expr *t, Stmt *b) { 

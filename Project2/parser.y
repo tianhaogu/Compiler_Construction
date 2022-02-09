@@ -171,6 +171,19 @@ void yyerror(const char *msg); // standard error-handling routine
 // %type <arrayaccess>       ArrayAccess
 
 
+%nonassoc WO_ELSE
+%nonassoc T_Else
+%nonassoc '='
+%left     T_Or
+%left     T_And	
+%nonassoc T_Equal T_NotEqual
+%nonassoc '<' T_LessEqual '>' T_GreaterEqual
+%left     '+' '-' 
+%left     '*' '/' '%'
+%nonassoc '!' NEGT T_Increm T_Decrem
+%nonassoc '[' '.'
+
+
 %%
 /* Rules
  * -----
@@ -217,7 +230,7 @@ Type    :    T_Int    { $$ = Type::intType; }
             Identifier *identifier = new Identifier(@1, $1);
             $$ = new NamedType(identifier);
         }
-        |    Type T_Dims    { $$ = new ArrayType(@1, $1); }
+        |    Type T_Dims   { $$ = new ArrayType(@1, $1); }
         ;
 
 FnDecl    :    T_Void T_Identifier '(' Formals ')' StmtBlock    {
@@ -263,6 +276,28 @@ ClassDecl    :    T_Class T_Identifier '{' FieldList '}'    {
                  NamedType *extends = new NamedType(ext_ident);
                  $$ = new ClassDecl(identifier, extends, $6, $8);
              }
+             |    T_Class T_Identifier '{' '}'    {
+                 Identifier *identifier = new Identifier(@2, $2);
+                 List<NamedType*> *impList = new List<NamedType*>;
+                 $$ = new ClassDecl(identifier, NULL, impList, new List<Decl*>);
+             }
+             |    T_Class T_Identifier T_Extends T_Identifier '{' '}'    {
+                 Identifier *identifier = new Identifier(@2, $2);
+                 Identifier *ext_ident = new Identifier(@4, $4);
+                 NamedType *extends = new NamedType(ext_ident);
+                 List<NamedType*> *impList = new List<NamedType*>;
+                 $$ = new ClassDecl(identifier, extends, impList, new List<Decl*>);
+             }
+             |    T_Class T_Identifier T_Implements IdentifierList '{' '}'    {
+                 Identifier *identifier = new Identifier(@2, $2);
+                 $$ = new ClassDecl(identifier, NULL, $4, new List<Decl*>);
+             }
+             |    T_Class T_Identifier T_Extends T_Identifier T_Implements IdentifierList '{' '}'    {
+                 Identifier *identifier = new Identifier(@2, $2);
+                 Identifier *ext_ident = new Identifier(@4, $4);
+                 NamedType *extends = new NamedType(ext_ident);
+                 $$ = new ClassDecl(identifier, extends, $6, new List<Decl*>);
+             }
              ;
 
 IdentifierList    :    IdentifierList ',' T_Identifier    {
@@ -277,8 +312,8 @@ IdentifierList    :    IdentifierList ',' T_Identifier    {
                   }
                   ;
 
-FieldList    :        { $$ = new List<Decl*>; }
-             |    FieldList Field    { ($$=$1)-> Append($2); }
+FieldList    :    FieldList Field    { ($$=$1)-> Append($2); }
+             |    Field { ($$=new List<Decl*>)-> Append($1); }
              ;
 
 Field    :    VarDecl    { $$=$1; }
@@ -289,10 +324,14 @@ InterfaceDecl    :    T_Interface T_Identifier '{' ProtoTypeList '}'    {
                      Identifier *identifier = new Identifier(@2, $2);
                      $$ = new InterfaceDecl(identifier, $4);
                  }
+                 |    T_Interface T_Identifier '{' '}'    {
+                     Identifier *identifier = new Identifier(@2, $2);
+                     $$ = new InterfaceDecl(identifier, new List<Decl*>);
+                 }
                  ;
 
-ProtoTypeList    :        { $$ = new List<Decl*>; }
-                 |    ProtoTypeList ProtoType    { ($$=$1)-> Append($2); }
+ProtoTypeList    :    ProtoTypeList ProtoType    { ($$=$1)-> Append($2); }
+                 |    ProtoType    { ($$=new List<Decl*>)-> Append($1); }
                  ;
 
 ProtoType    :    Type T_Identifier '(' Formals ')' ';'    {
@@ -307,14 +346,17 @@ ProtoType    :    Type T_Identifier '(' Formals ')' ';'    {
              ;
 
 StmtBlock    :    '{' VarDeclList StmtList '}'    { $$ = new StmtBlock($2, $3); }
+             |    '{' StmtList '}'    { $$ = new StmtBlock(new List<VarDecl*>, $2); }
+             |    '{' VarDeclList '}'    { $$ = new StmtBlock($2, new List<Stmt*>); }
+             |    '{' '}'    { $$ = new StmtBlock(new List<VarDecl*>, new List<Stmt*>); }
              ;
 
-VarDeclList    :        { $$ = new List<VarDecl*>; }
-               |    VarDeclList VarDecl    { ($$=$1)-> Append($2); }
+VarDeclList    :    VarDeclList VarDecl    { ($$=$1)-> Append($2); }
+               |    VarDecl    { ($$=new List<VarDecl*>)-> Append($1); }
                ;
 
-StmtList    :        { $$ = new List<Stmt*>; }
-            |    StmtList Stmt    { ($$=$1)-> Append($2); }        
+StmtList    :    StmtList Stmt   { ($$=$1)-> Append($2); } 
+            |    Stmt    { ($$=new List<Stmt*>)-> Append($1); }
             ;
 
 Stmt    :    ExprBrack ';'    { $$=$1; }
@@ -328,7 +370,7 @@ Stmt    :    ExprBrack ';'    { $$=$1; }
         |    StmtBlock    { $$=$1; }
         ;
 
-IfStmt    :    T_If '(' Expr ')' Stmt    { $$ = new IfStmt($3, $5, NULL); }
+IfStmt    :    T_If '(' Expr ')' Stmt %prec WO_ELSE   { $$ = new IfStmt($3, $5, NULL); }
           |    T_If '(' Expr ')' Stmt T_Else Stmt    { $$ = new IfStmt($3, $5, $7); }
           ;
 
@@ -355,21 +397,25 @@ ExprList    :    ExprList ',' Expr    { ($$=$1)-> Append($3); }
             |    Expr    { ($$ = new List<Expr*>)-> Append($1); }
             ;
 
-SwitchStmt    :    T_Switch '(' Expr ')' CaseList DefaultBrack    { $$ = new SwitchStmt($3, $5, $6); }
+SwitchStmt    :    T_Switch '(' Expr ')' '{' CaseList DefaultBrack '}'    { $$ = new SwitchStmt($3, $6, $7); }
               ;
 
 CaseList    :    CaseList Case    { ($$=$1)-> Append($2); }
             |    Case    { ($$ = new List<CaseExpr*>)-> Append($1); }
             ;
 
-Case    :    T_Case T_IntConstant ':' Stmt    { 
+Case    :    T_Case T_IntConstant ':' StmtList    { 
             IntConst *intConst = new IntConst(@2, $2);
             $$ = new CaseExpr(intConst, $4);
         }
+        |    T_Case T_IntConstant ':'    { 
+            IntConst *intConst = new IntConst(@2, $2);
+            $$ = new CaseExpr(intConst, new List<Stmt*>);
+        }
         ;
 
-DefaultBrack    :    T_Default ':' Stmt    { $$ = new DefaultBrack($3); }
-                |           { $$ = new EmptyDefaultBrack(0); }
+DefaultBrack    :    T_Default ':' StmtList    { $$ = new DefaultBrack($3); }
+                |           { $$ = NULL; }
                 ;
 
 Expr    :    AssignExpr    { $$=$1; }
@@ -403,14 +449,14 @@ LValue    :    T_Identifier    {
               Identifier *identifier = new Identifier(@3, $3);
               $$ = new FieldAccess($1, identifier);
           }
-          |    Expr T_Dims Expr T_Dims    {
+          |    Expr '[' Expr ']'    {
               $$ = new ArrayAccess(Join(@1, @4), $1, $3);
           }
           ;
 
 Call    :    T_Identifier '(' Actuals ')'    {
             Identifier *identifier = new Identifier(@1, $1);
-            $$ = new Call(Join(@1, @4), new EmptyExpr(), identifier, $3);
+            $$ = new Call(Join(@1, @4), NULL, identifier, $3);
         }
         |    Expr '.' T_Identifier '(' Actuals ')'    {
             Identifier *identifier = new Identifier(@3, $3);
@@ -449,7 +495,7 @@ ArithmeticExpr    :    Expr '+' Expr    {
                       Operator *mod = new Operator(@2, "%");
                       $$ = new ArithmeticExpr($1, mod, $3);
                   }
-                  |    '-' Expr    {
+                  |    '-' Expr %prec NEGT   {
                       Operator *neg = new Operator(@1, "-");
                       $$ = new ArithmeticExpr(neg, $2);
                   }
