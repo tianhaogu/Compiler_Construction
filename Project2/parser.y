@@ -473,7 +473,7 @@ Constant    :    T_IntConstant    { $$ = new IntConstant(@1, $1); }
             |    T_BoolConstant    { $$ = new BoolConstant(@1, $1); }
             |    T_StringConstant    { $$ = new StringConstant(@1, $1); }
             |    T_Null    { $$ = new NullConstant(@1); }
-                ;
+            ;
 
 ArithmeticExpr    :    Expr '+' Expr    {
                       Operator *plus = new Operator(@2, "+");
