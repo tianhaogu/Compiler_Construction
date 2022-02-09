@@ -96,6 +96,7 @@ protected:
 public:
     CompoundExpr(Expr *lhs, Operator *op, Expr *rhs); // for binary
     CompoundExpr(Operator *op, Expr *rhs);             // for unary
+    CompoundExpr(Expr *lhs, Operator *op);             // for postfix
     void PrintChildren(int indentLevel);
 };
 
@@ -104,6 +105,12 @@ public:
     ArithmeticExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     ArithmeticExpr(Operator *op, Expr *rhs) : CompoundExpr(op,rhs) {}
     const char *GetPrintNameForNode() { return "ArithmeticExpr"; }
+};
+
+class PostfixExpr : public CompoundExpr{
+public:
+    PostfixExpr(Expr *lhs, Operator *op) : CompoundExpr(lhs,op) {}
+    const char *GetPrintNameForNode() { return "PostfixExpr"; }
 };
 
 class RelationalExpr : public CompoundExpr {
@@ -216,6 +223,5 @@ public:
     ReadLineExpr(yyltype loc) : Expr (loc) {}
     const char *GetPrintNameForNode() { return "ReadLineExpr"; }
 };
-
     
 #endif

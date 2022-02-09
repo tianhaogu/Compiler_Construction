@@ -71,7 +71,7 @@ y.tab.h y.tab.c: parser.y
 # rules to build compiler (dcc)
 
 $(COMPILER) : $(PRECOMPILED) $(OBJS)
-	$(LD) -o $@ $(PRECOMPILED) $(OBJS) $(LIBS)
+	$(LD) -no-pie -o $@ $(PRECOMPILED) $(OBJS) $(LIBS)
 
 $(COMPILER).purify : $(PRECOMPILED) $(OBJS)
 	purify -log-file=purify.log -cache-dir=/tmp/$(USER) -leaks-at-exit=no $(LD) -o $@ $(PRECOMPILED) $(OBJS) $(LIBS)
@@ -93,7 +93,7 @@ depend:
 	$(CC) -MM -MG $(SRCS) >> Makefile
 
 clean:
-	rm -f $(JUNK) y.output $(PRODUCTS)
+	rm -f $(JUNK) y.output $(PRODUCTS) ./samples/test*
 
 # DO NOT DELETE
 

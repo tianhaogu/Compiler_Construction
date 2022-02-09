@@ -62,12 +62,20 @@ CompoundExpr::CompoundExpr(Operator *o, Expr *r)
     (right=r)->SetParent(this);
 }
 
+CompoundExpr::CompoundExpr(Expr *l, Operator *o) 
+  : Expr(Join(l->GetLocation(), o->GetLocation())) {
+    Assert(l != NULL && o != NULL);
+    left = NULL; 
+    (op=o)->SetParent(this);
+    (left=l)->SetParent(this); 
+}
+
 void CompoundExpr::PrintChildren(int indentLevel) {
    if (left) left->Print(indentLevel+1);
    op->Print(indentLevel+1);
-   right->Print(indentLevel+1);
-}
-   
+   if (right) right->Print(indentLevel+1);
+}   
+
   
 ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc) {
     (base=b)->SetParent(this); 

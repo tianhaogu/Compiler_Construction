@@ -47,6 +47,54 @@ public:
     void PrintChildren(int indentLevel);
 };
 
+class IntConst : public Stmt {
+protected:
+    int value;
+  
+public:
+    IntConst(yyltype loc, int val);
+    const char *GetPrintNameForNode() { return "IntConstant"; }
+    void PrintChildren(int indentLevel);
+};
+
+class CaseExpr : public Stmt {
+protected:
+    IntConst *test;
+    Stmt *body;
+  
+public:
+    CaseExpr(IntConst *test, Stmt *body);
+    const char *GetPrintNameForNode() { return "Case"; }
+    void PrintChildren(int indentLevel);
+};
+
+class DefaultBrack : public Stmt {
+protected:
+    Stmt *body;
+  
+public:
+    DefaultBrack(Stmt *body);
+    const char *GetPrintNameForNode() { return "Default"; }
+    void PrintChildren(int indentLevel);
+};
+
+class EmptyDefaultBrack : public DefaultBrack {
+public:
+    EmptyDefaultBrack(Stmt *body);
+    void PrintChildren(int indentLevel);
+};
+
+class SwitchStmt : public Stmt {
+protected:
+    Expr *test;
+    List<CaseExpr*> *stmts;
+    DefaultBrack *defaultBody;
+    
+public:
+    SwitchStmt(Expr *testExpr, List<CaseExpr*> *statements, DefaultBrack *defaultBody);
+    const char *GetPrintNameForNode() { return "SwitchStmt"; }
+    void PrintChildren(int indentLevel);
+};
   
 class ConditionalStmt : public Stmt {
 protected:
