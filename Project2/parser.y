@@ -181,7 +181,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %left     '+' '-' 
 %left     '*' '/' '%'
 %nonassoc '!' NEGT T_Increm T_Decrem
-%nonassoc '[' '.'
+%left     '[' '.'
 
 
 %%
@@ -514,7 +514,7 @@ RelationalExpr    :    Expr T_LessEqual Expr    {
                       $$ = new RelationalExpr($1, geq, $3);
                   }
                   |    Expr '>' Expr    {
-                      Operator *greater = new Operator(@2, "<");
+                      Operator *greater = new Operator(@2, ">");
                       $$ = new RelationalExpr($1, greater, $3);
                   }
                   ;
@@ -552,11 +552,11 @@ ReadLineExpr       :    T_ReadLine '(' ')'    { $$ = new ReadLineExpr(@1); }
 NewExpr    :    T_New '(' T_Identifier ')'    {
                Identifier *identifier = new Identifier(@3, $3);
                NamedType *namedtype = new NamedType(identifier);
-               $$ = new NewExpr(@1, namedtype);
+               $$ = new NewExpr(Join(@1, @4), namedtype);
            }
            ;
 
-NewArrayExpr    :    T_NewArray '(' Expr ',' Type ')'    { $$ = new NewArrayExpr(@1, $3, $5); }
+NewArrayExpr    :    T_NewArray '(' Expr ',' Type ')'    { $$ = new NewArrayExpr(Join(@1, @6), $3, $5); }
                 ;
 
 PostfixExpr    :    LValue T_Increm     {
