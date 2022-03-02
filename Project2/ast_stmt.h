@@ -9,7 +9,6 @@
  * classes for the additional grammar elements (Switch/Postfix)
  */
 
-
 #ifndef _H_ast_stmt
 #define _H_ast_stmt
 
@@ -19,150 +18,158 @@
 class Decl;
 class VarDecl;
 class Expr;
-  
-class Program : public Node {
+
+class Program : public Node
+{
 protected:
-    List<Decl*> *decls;
-     
+    List<Decl *> *decls;
+
 public:
-    Program(List<Decl*> *declList);
+    Program(List<Decl *> *declList);
     const char *GetPrintNameForNode() { return "Program"; }
     void PrintChildren(int indentLevel);
 };
 
-class Stmt : public Node {
+class Stmt : public Node
+{
 public:
     Stmt() : Node() {}
     Stmt(yyltype loc) : Node(loc) {}
 };
 
-class StmtBlock : public Stmt {
+class StmtBlock : public Stmt
+{
 protected:
-    List<VarDecl*> *decls;
-    List<Stmt*> *stmts;
-    
+    List<VarDecl *> *decls;
+    List<Stmt *> *stmts;
+
 public:
-    StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
+    StmtBlock(List<VarDecl *> *variableDeclarations, List<Stmt *> *statements);
     const char *GetPrintNameForNode() { return "StmtBlock"; }
     void PrintChildren(int indentLevel);
 };
 
-class IntConst : public Stmt {
+class IntConst : public Stmt
+{
 protected:
     int value;
-  
+
 public:
     IntConst(yyltype loc, int val);
     const char *GetPrintNameForNode() { return "IntConstant"; }
     void PrintChildren(int indentLevel);
 };
 
-class CaseExpr : public Stmt {
+class CaseExpr : public Stmt
+{
 protected:
     IntConst *test;
-    Stmt *body;
-  
+    List<Stmt *> *stmts;
+
 public:
-    CaseExpr(IntConst *test, Stmt *body);
+    CaseExpr(IntConst *test, List<Stmt *> *stmts);
     const char *GetPrintNameForNode() { return "Case"; }
     void PrintChildren(int indentLevel);
 };
 
-class DefaultBrack : public Stmt {
+class DefaultBrack : public Stmt
+{
 protected:
-    Stmt *body;
-  
+    List<Stmt *> *stmts;
+
 public:
-    DefaultBrack(Stmt *body);
+    DefaultBrack(List<Stmt *> *stmts);
     const char *GetPrintNameForNode() { return "Default"; }
     void PrintChildren(int indentLevel);
 };
 
-class EmptyDefaultBrack : public DefaultBrack {
-public:
-    EmptyDefaultBrack(Stmt *body);
-    void PrintChildren(int indentLevel);
-};
-
-class SwitchStmt : public Stmt {
+class SwitchStmt : public Stmt
+{
 protected:
     Expr *test;
-    List<CaseExpr*> *stmts;
+    List<CaseExpr *> *stmts;
     DefaultBrack *defaultBody;
-    
+
 public:
-    SwitchStmt(Expr *testExpr, List<CaseExpr*> *statements, DefaultBrack *defaultBody);
+    SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBrack *defaultBody);
     const char *GetPrintNameForNode() { return "SwitchStmt"; }
     void PrintChildren(int indentLevel);
 };
-  
-class ConditionalStmt : public Stmt {
+
+class ConditionalStmt : public Stmt
+{
 protected:
     Expr *test;
     Stmt *body;
-  
+
 public:
     ConditionalStmt(Expr *testExpr, Stmt *body);
 };
 
-class LoopStmt : public ConditionalStmt {
+class LoopStmt : public ConditionalStmt
+{
 public:
     LoopStmt(Expr *testExpr, Stmt *body)
-            : ConditionalStmt(testExpr, body) {}
+        : ConditionalStmt(testExpr, body) {}
 };
 
-class ForStmt : public LoopStmt {
+class ForStmt : public LoopStmt
+{
 protected:
     Expr *init, *step;
-  
+
 public:
     ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
     const char *GetPrintNameForNode() { return "ForStmt"; }
     void PrintChildren(int indentLevel);
 };
 
-class WhileStmt : public LoopStmt {
+class WhileStmt : public LoopStmt
+{
 public:
     WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
     const char *GetPrintNameForNode() { return "WhileStmt"; }
     void PrintChildren(int indentLevel);
 };
 
-class IfStmt : public ConditionalStmt {
+class IfStmt : public ConditionalStmt
+{
 protected:
     Stmt *elseBody;
-  
+
 public:
     IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
     const char *GetPrintNameForNode() { return "IfStmt"; }
     void PrintChildren(int indentLevel);
 };
 
-class BreakStmt : public Stmt {
+class BreakStmt : public Stmt
+{
 public:
     BreakStmt(yyltype loc) : Stmt(loc) {}
     const char *GetPrintNameForNode() { return "BreakStmt"; }
 };
 
-class ReturnStmt : public Stmt  {
+class ReturnStmt : public Stmt
+{
 protected:
     Expr *expr;
-  
+
 public:
     ReturnStmt(yyltype loc, Expr *expr);
     const char *GetPrintNameForNode() { return "ReturnStmt"; }
     void PrintChildren(int indentLevel);
 };
 
-class PrintStmt : public Stmt{
+class PrintStmt : public Stmt
+{
 protected:
-    List<Expr*> *args;
-    
+    List<Expr *> *args;
+
 public:
-    PrintStmt(List<Expr*> *arguments);
+    PrintStmt(List<Expr *> *arguments);
     const char *GetPrintNameForNode() { return "PrintStmt"; }
     void PrintChildren(int indentLevel);
 };
-
 
 #endif
