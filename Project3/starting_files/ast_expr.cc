@@ -31,7 +31,7 @@ Operator::Operator(yyltype loc, const char *tok) : Node(loc) {
     strncpy(tokenString, tok, sizeof(tokenString));
 }
 CompoundExpr::CompoundExpr(Expr *l, Operator *o, Expr *r) 
-  : Expr(Join(l->GetLocation(), r->GetLocation())) {
+    : Expr(Join(l->GetLocation(), r->GetLocation())) {
     Assert(l != NULL && o != NULL && r != NULL);
     (op=o)->SetParent(this);
     (left=l)->SetParent(this); 
@@ -39,7 +39,7 @@ CompoundExpr::CompoundExpr(Expr *l, Operator *o, Expr *r)
 }
 
 CompoundExpr::CompoundExpr(Operator *o, Expr *r) 
-  : Expr(Join(o->GetLocation(), r->GetLocation())) {
+    : Expr(Join(o->GetLocation(), r->GetLocation())) {
     Assert(o != NULL && r != NULL);
     left = NULL; 
     (op=o)->SetParent(this);
@@ -47,7 +47,7 @@ CompoundExpr::CompoundExpr(Operator *o, Expr *r)
 }
 
 CompoundExpr::CompoundExpr(Expr *l, Operator *o) 
-  : Expr(Join(l->GetLocation(), o->GetLocation())) {
+    : Expr(Join(l->GetLocation(), o->GetLocation())) {
     Assert(l != NULL && o != NULL);
     left = NULL; 
     (op=o)->SetParent(this);
@@ -60,7 +60,7 @@ ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc) {
 }
      
 FieldAccess::FieldAccess(Expr *b, Identifier *f) 
-  : LValue(b? Join(b->GetLocation(), f->GetLocation()) : *f->GetLocation()) {
+    : LValue(b? Join(b->GetLocation(), f->GetLocation()) : *f->GetLocation()) {
     Assert(f != NULL); // b can be be NULL (just means no explicit base)
     base = b; 
     if (base) base->SetParent(this); 
@@ -78,8 +78,8 @@ Call::Call(yyltype loc, Expr *b, Identifier *f, List<Expr*> *a) : Expr(loc)  {
  
 
 NewExpr::NewExpr(yyltype loc, NamedType *c) : Expr(loc) { 
-  Assert(c != NULL);
-  (cType=c)->SetParent(this);
+    Assert(c != NULL);
+    (cType=c)->SetParent(this);
 }
 
 

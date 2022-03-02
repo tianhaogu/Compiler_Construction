@@ -20,56 +20,51 @@
 class Identifier;
 class Stmt;
 
-class Decl : public Node 
-{
-  protected:
-    Identifier *id;
+class Decl : public Node {
+    protected:
+        Identifier *id;
   
-  public:
-    Decl(Identifier *name);
-    friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
+    public:
+        Decl(Identifier *name);
+        friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
 };
 
-class VarDecl : public Decl 
-{
-  protected:
-    Type *type;
+class VarDecl : public Decl {
+    protected:
+        Type *type;
     
-  public:
-    VarDecl(Identifier *name, Type *type);
+    public:
+        VarDecl(Identifier *name, Type *type);
 };
 
-class ClassDecl : public Decl 
-{
-  protected:
-    List<Decl*> *members;
-    NamedType *extends;
-    List<NamedType*> *implements;
+class ClassDecl : public Decl {
+    protected:
+        List<Decl*> *members;
+        NamedType *extends;
+        List<NamedType*> *implements;
 
-  public:
-    ClassDecl(Identifier *name, NamedType *extends, 
-              List<NamedType*> *implements, List<Decl*> *members);
+    public:
+        ClassDecl(Identifier *name, NamedType *extends, 
+                  List<NamedType*> *implements, List<Decl*> *members);
 };
 
-class InterfaceDecl : public Decl 
-{
-  protected:
-    List<Decl*> *members;
+class InterfaceDecl : public Decl {
+    protected:
+        List<Decl*> *members;
     
-  public:
-    InterfaceDecl(Identifier *name, List<Decl*> *members);
+    public:
+        InterfaceDecl(Identifier *name, List<Decl*> *members);
 };
 
-class FnDecl : public Decl 
-{
-  protected:
-    List<VarDecl*> *formals;
-    Type *returnType;
-    Stmt *body;
+class FnDecl : public Decl {
+    protected:
+        List<VarDecl*> *formals;
+        Type *returnType;
+        Stmt *body;
     
-  public:
-    FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
-    void SetFunctionBody(Stmt *b);
+    public:
+        FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
+        void SetFunctionBody(Stmt *b);
 };
 
 #endif

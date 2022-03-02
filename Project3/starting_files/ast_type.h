@@ -17,43 +17,40 @@
 #include <iostream>
 
 
-class Type : public Node 
-{
-  protected:
-    char *typeName;
+class Type : public Node {
+    protected:
+        char *typeName;
 
-  public :
-    static Type *intType, *doubleType, *boolType, *voidType,
-                *nullType, *stringType, *errorType;
+    public :
+        static Type *intType, *doubleType, *boolType, *voidType,
+                    *nullType, *stringType, *errorType;
 
-    Type(yyltype loc) : Node(loc) {}
-    Type(const char *str);
+        Type(yyltype loc) : Node(loc) {}
+        Type(const char *str);
     
-    virtual void PrintToStream(std::ostream& out) { out << typeName; }
-    friend std::ostream& operator<<(std::ostream& out, Type *t) { t->PrintToStream(out); return out; }
-    virtual bool IsEquivalentTo(Type *other) { return this == other; }
+        virtual void PrintToStream(std::ostream& out) { out << typeName; }
+        friend std::ostream& operator<<(std::ostream& out, Type *t) { t->PrintToStream(out); return out; }
+        virtual bool IsEquivalentTo(Type *other) { return this == other; }
 };
 
-class NamedType : public Type 
-{
-  protected:
-    Identifier *id;
+class NamedType : public Type {
+    protected:
+        Identifier *id;
     
-  public:
-    NamedType(Identifier *i);
+    public:
+        NamedType(Identifier *i);
     
-    void PrintToStream(std::ostream& out) { out << id; }
+        void PrintToStream(std::ostream& out) { out << id; }
 };
 
-class ArrayType : public Type 
-{
-  protected:
-    Type *elemType;
+class ArrayType : public Type {
+    protected:
+        Type *elemType;
 
-  public:
-    ArrayType(yyltype loc, Type *elemType);
+    public:
+        ArrayType(yyltype loc, Type *elemType);
     
-    void PrintToStream(std::ostream& out) { out << elemType << "[]"; }
+        void PrintToStream(std::ostream& out) { out << elemType << "[]"; }
 };
 
  

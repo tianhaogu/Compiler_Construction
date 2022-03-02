@@ -20,135 +20,120 @@ class Decl;
 class VarDecl;
 class Expr;
   
-class Program : public Node
-{
-  protected:
-     List<Decl*> *decls;
+class Program : public Node {
+    protected:
+        List<Decl*> *decls;
      
-  public:
-     Program(List<Decl*> *declList);
-     void Check();
+    public:
+        Program(List<Decl*> *declList);
+        void Check();
 };
 
-class Stmt : public Node
-{
-  public:
-     Stmt() : Node() {}
-     Stmt(yyltype loc) : Node(loc) {}
+class Stmt : public Node {
+    public:
+        Stmt() : Node() {}
+        Stmt(yyltype loc) : Node(loc) {}
 };
 
-class StmtBlock : public Stmt 
-{
-  protected:
-    List<VarDecl*> *decls;
-    List<Stmt*> *stmts;
+class StmtBlock : public Stmt {
+    protected:
+        List<VarDecl*> *decls;
+        List<Stmt*> *stmts;
     
-  public:
-    StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
+    public:
+        StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
 };
 
-class IntConst : public Stmt
-{
-protected:
-    int value;
+class IntConst : public Stmt {
+    protected:
+        int value;
 
-public:
-    IntConst(yyltype loc, int val);
+    public:
+        IntConst(yyltype loc, int val);
 };
 
-class CaseExpr : public Stmt
-{
-protected:
-    IntConst *test;
-    List<Stmt *> *stmts;
+class CaseExpr : public Stmt {
+    protected:
+        IntConst *test;
+        List<Stmt *> *stmts;
 
-public:
-    CaseExpr(IntConst *test, List<Stmt *> *stmts);
+    public:
+        CaseExpr(IntConst *test, List<Stmt *> *stmts);
 };
 
-class DefaultBrack : public Stmt
-{
-protected:
-    List<Stmt *> *stmts;
+class DefaultBrack : public Stmt {
+    protected:
+        List<Stmt *> *stmts;
 
-public:
-    DefaultBrack(List<Stmt *> *stmts);
+    public:
+        DefaultBrack(List<Stmt *> *stmts);
 };
 
-class SwitchStmt : public Stmt
-{
-protected:
-    Expr *test;
-    List<CaseExpr *> *stmts;
-    DefaultBrack *defaultBody;
+class SwitchStmt : public Stmt {
+    protected:
+        Expr *test;
+        List<CaseExpr *> *stmts;
+        DefaultBrack *defaultBody;
 
-public:
-    SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBrack *defaultBody);
+    public:
+        SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBrack *defaultBody);
 };
   
-class ConditionalStmt : public Stmt
-{
-  protected:
-    Expr *test;
-    Stmt *body;
+class ConditionalStmt : public Stmt {
+    protected:
+        Expr *test;
+        Stmt *body;
   
-  public:
-    ConditionalStmt(Expr *testExpr, Stmt *body);
+    public:
+        ConditionalStmt(Expr *testExpr, Stmt *body);
 };
 
-class LoopStmt : public ConditionalStmt 
-{
-  public:
-    LoopStmt(Expr *testExpr, Stmt *body)
-            : ConditionalStmt(testExpr, body) {}
+class LoopStmt : public ConditionalStmt {
+    public:
+        LoopStmt(Expr *testExpr, Stmt *body)
+                : ConditionalStmt(testExpr, body) {}
 };
 
-class ForStmt : public LoopStmt 
-{
-  protected:
-    Expr *init, *step;
+class ForStmt : public LoopStmt {
+    protected:
+        Expr *init, *step;
   
-  public:
-    ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
+    public:
+        ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
 };
 
-class WhileStmt : public LoopStmt 
-{
-  public:
-    WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
+class WhileStmt : public LoopStmt {
+    public:
+        WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
 };
 
-class IfStmt : public ConditionalStmt 
-{
-  protected:
-    Stmt *elseBody;
+class IfStmt : public ConditionalStmt {
+    protected:
+        Stmt *elseBody;
   
-  public:
-    IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
+    public:
+        IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
 };
 
-class BreakStmt : public Stmt 
-{
-  public:
-    BreakStmt(yyltype loc) : Stmt(loc) {}
+class BreakStmt : public Stmt {
+    public:
+        BreakStmt(yyltype loc) : Stmt(loc) {}
 };
 
-class ReturnStmt : public Stmt  
-{
-  protected:
-    Expr *expr;
+class ReturnStmt : public Stmt {
+    protected:
+        Expr *expr;
   
-  public:
-    ReturnStmt(yyltype loc, Expr *expr);
+    public:
+        ReturnStmt(yyltype loc, Expr *expr);
 };
 
-class PrintStmt : public Stmt
-{
-  protected:
-    List<Expr*> *args;
+class PrintStmt : public Stmt {
+    protected:
+        List<Expr*> *args;
     
-  public:
-    PrintStmt(List<Expr*> *arguments);
+    public:
+        PrintStmt(List<Expr*> *arguments);
 };
 
 
