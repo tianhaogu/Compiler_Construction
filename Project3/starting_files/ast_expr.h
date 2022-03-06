@@ -29,6 +29,7 @@ public:
   Expr(yyltype loc) : Stmt(loc) { t = NULL; }
   Expr() : Stmt() {}
   virtual Type *CheckType() { return t; }
+  virtual void Check() { CheckType(); }
 };
 
 /* This node type is used for those places where an expression is optional.

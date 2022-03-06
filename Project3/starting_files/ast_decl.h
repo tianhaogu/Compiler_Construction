@@ -31,6 +31,9 @@ public:
   const char *GetName() { return id->GetName(); }
 
   virtual void Check() {}
+  virtual bool isClass() { return false; }
+  virtual bool isInter() { return false; }
+  virtual bool isFunct() { return false; }
 };
 
 class VarDecl : public Decl
@@ -40,6 +43,7 @@ protected:
 
 public:
   VarDecl(Identifier *name, Type *type);
+  Type *GetType() {return type; }
   void Check() { type->Check(); }
 };
 
@@ -53,6 +57,7 @@ protected:
 public:
   ClassDecl(Identifier *name, NamedType *extends,
             List<NamedType *> *implements, List<Decl *> *members);
+  bool isClass() { return true; }
 };
 
 class InterfaceDecl : public Decl
@@ -62,6 +67,7 @@ protected:
 
 public:
   InterfaceDecl(Identifier *name, List<Decl *> *members);
+  bool isInter() { return true; }
 };
 
 class FnDecl : public Decl
@@ -74,6 +80,8 @@ protected:
 public:
   FnDecl(Identifier *name, Type *returnType, List<VarDecl *> *formals);
   void SetFunctionBody(Stmt *b);
+  bool isFunct() { return true; }
+  bool IsEquivalentTo(FnDecl *fn);
   void Check();
 };
 

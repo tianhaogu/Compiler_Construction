@@ -5,6 +5,7 @@
 #include "ast_type.h"
 #include "ast_decl.h"
 #include <string.h>
+#include "errors.h"
 
 /* Class constants
  * ---------------
@@ -33,6 +34,19 @@ NamedType::NamedType(Identifier *i) : Type(*i->GetLocation())
     Assert(i != NULL);
     (id = i)->SetParent(this);
     d = NULL;
+    isError = false;
+}
+
+void NamedType::Check() {
+    if (!d && !isError) {
+        Decl *tempD = FindDecl(id);
+        if (tempD && (tempD->isClass() || tempD->isInter())) {
+            d = tempD;
+        } else {
+            ReportError::IdentifierNotDeclared(id, LookingForType);
+            isError = true;
+        }
+    }
 }
 
 ArrayType::ArrayType(yyltype loc, Type *et) : Type(loc)

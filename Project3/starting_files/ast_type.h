@@ -44,12 +44,13 @@ class NamedType : public Type
 protected:
   Identifier *id;
   Decl *d;
+  bool isError;
 
 public:
   NamedType(Identifier *i);
 
   void PrintToStream(std::ostream &out) { out << id; }
-  // void Check();
+  void Check();
 };
 
 class ArrayType : public Type

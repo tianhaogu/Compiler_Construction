@@ -48,14 +48,31 @@ void FnDecl::SetFunctionBody(Stmt *b)
     (body = b)->SetParent(this);
 }
 
+bool FnDecl::IsEquivalentTo(FnDecl *fn)
+{
+    if (!returnType->IsEquivalentTo(fn->returnType) ||
+        formals->NumElements() != fn->formals->NumElements())
+    {
+        return false;
+    }
+    for (int i = 0; i < formals->NumElements(); ++i)
+    {
+        if (!formals->Nth(i)->GetType()->IsEquivalentTo(fn->formals->Nth(i)->GetType()))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void FnDecl::Check()
 {
     returnType->Check();
+    scope = new Scope();
+    formals->DeclareAll(scope);
+    formals->CheckAll();
     if (body != NULL)
     {
-        scope = new Scope();
-        formals->DeclareAll(scope);
-        formals->CheckAll();
         body->Check();
     }
 }
