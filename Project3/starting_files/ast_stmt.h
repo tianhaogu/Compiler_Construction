@@ -9,7 +9,6 @@
  * semantic analysis for rules pertaining to statements.
  */
 
-
 #ifndef _H_ast_stmt
 #define _H_ast_stmt
 
@@ -19,140 +18,139 @@
 class Decl;
 class VarDecl;
 class Expr;
-  
+
 class Program : public Node
 {
-  protected:
-     List<Decl*> *decls;
-     Scope *s;
-     
-  public:
-     Program(List<Decl*> *declList);
-     void Check();
+protected:
+  List<Decl *> *decls;
+  Scope *s;
+
+public:
+  Program(List<Decl *> *declList);
+  void Check();
 };
 
 class Stmt : public Node
 {
-  public:
-     Stmt() : Node() {}
-     Stmt(yyltype loc) : Node(loc) {}
-     virtual void Check() { }
+public:
+  Stmt() : Node() {}
+  Stmt(yyltype loc) : Node(loc) {}
+  virtual void Check() {}
 };
 
-class StmtBlock : public Stmt 
+class StmtBlock : public Stmt
 {
-  protected:
-    List<VarDecl*> *decls;
-    List<Stmt*> *stmts;
-    
-  public:
-    StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
-    void Check();
+protected:
+  List<VarDecl *> *decls;
+  List<Stmt *> *stmts;
+
+public:
+  StmtBlock(List<VarDecl *> *variableDeclarations, List<Stmt *> *statements);
+  void Check();
 };
 
 class IntConst : public Stmt
 {
 protected:
-    int value;
+  int value;
 
 public:
-    IntConst(yyltype loc, int val);
+  IntConst(yyltype loc, int val);
 };
 
 class CaseExpr : public Stmt
 {
 protected:
-    IntConst *test;
-    List<Stmt *> *stmts;
+  IntConst *test;
+  List<Stmt *> *stmts;
 
 public:
-    CaseExpr(IntConst *test, List<Stmt *> *stmts);
+  CaseExpr(IntConst *test, List<Stmt *> *stmts);
 };
 
 class DefaultBrack : public Stmt
 {
 protected:
-    List<Stmt *> *stmts;
+  List<Stmt *> *stmts;
 
 public:
-    DefaultBrack(List<Stmt *> *stmts);
+  DefaultBrack(List<Stmt *> *stmts);
 };
 
 class SwitchStmt : public Stmt
 {
 protected:
-    Expr *test;
-    List<CaseExpr *> *stmts;
-    DefaultBrack *defaultBody;
+  Expr *test;
+  List<CaseExpr *> *stmts;
+  DefaultBrack *defaultBody;
 
 public:
-    SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBrack *defaultBody);
+  SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBrack *defaultBody);
 };
-  
+
 class ConditionalStmt : public Stmt
 {
-  protected:
-    Expr *test;
-    Stmt *body;
-  
-  public:
-    ConditionalStmt(Expr *testExpr, Stmt *body);
+protected:
+  Expr *test;
+  Stmt *body;
+
+public:
+  ConditionalStmt(Expr *testExpr, Stmt *body);
 };
 
-class LoopStmt : public ConditionalStmt 
+class LoopStmt : public ConditionalStmt
 {
-  public:
-    LoopStmt(Expr *testExpr, Stmt *body)
-            : ConditionalStmt(testExpr, body) {}
+public:
+  LoopStmt(Expr *testExpr, Stmt *body)
+      : ConditionalStmt(testExpr, body) {}
 };
 
-class ForStmt : public LoopStmt 
+class ForStmt : public LoopStmt
 {
-  protected:
-    Expr *init, *step;
-  
-  public:
-    ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
+protected:
+  Expr *init, *step;
+
+public:
+  ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
 };
 
-class WhileStmt : public LoopStmt 
+class WhileStmt : public LoopStmt
 {
-  public:
-    WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
+public:
+  WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
 };
 
-class IfStmt : public ConditionalStmt 
+class IfStmt : public ConditionalStmt
 {
-  protected:
-    Stmt *elseBody;
-  
-  public:
-    IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
+protected:
+  Stmt *elseBody;
+
+public:
+  IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
 };
 
-class BreakStmt : public Stmt 
+class BreakStmt : public Stmt
 {
-  public:
-    BreakStmt(yyltype loc) : Stmt(loc) {}
+public:
+  BreakStmt(yyltype loc) : Stmt(loc) {}
 };
 
-class ReturnStmt : public Stmt  
+class ReturnStmt : public Stmt
 {
-  protected:
-    Expr *expr;
-  
-  public:
-    ReturnStmt(yyltype loc, Expr *expr);
+protected:
+  Expr *expr;
+
+public:
+  ReturnStmt(yyltype loc, Expr *expr);
 };
 
 class PrintStmt : public Stmt
 {
-  protected:
-    List<Expr*> *args;
-    
-  public:
-    PrintStmt(List<Expr*> *arguments);
-};
+protected:
+  List<Expr *> *args;
 
+public:
+  PrintStmt(List<Expr *> *arguments);
+};
 
 #endif

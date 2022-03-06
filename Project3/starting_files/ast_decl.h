@@ -20,61 +20,61 @@
 class Identifier;
 class Stmt;
 
-class Decl : public Node 
+class Decl : public Node
 {
-  protected:
-    Identifier *id;
-  
-  public:
-    Decl(Identifier *name);
-    friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
-    const char *GetName() { return id->GetName(); }
+protected:
+  Identifier *id;
 
-    virtual void Check() { }
+public:
+  Decl(Identifier *name);
+  friend std::ostream &operator<<(std::ostream &out, Decl *d) { return out << d->id; }
+  const char *GetName() { return id->GetName(); }
+
+  virtual void Check() {}
 };
 
-class VarDecl : public Decl 
+class VarDecl : public Decl
 {
-  protected:
-    Type *type;
-    
-  public:
-    VarDecl(Identifier *name, Type *type);
-    void Check() { type->Check(); }
+protected:
+  Type *type;
+
+public:
+  VarDecl(Identifier *name, Type *type);
+  void Check() { type->Check(); }
 };
 
-class ClassDecl : public Decl 
+class ClassDecl : public Decl
 {
-  protected:
-    List<Decl*> *members;
-    NamedType *extends;
-    List<NamedType*> *implements;
+protected:
+  List<Decl *> *members;
+  NamedType *extends;
+  List<NamedType *> *implements;
 
-  public:
-    ClassDecl(Identifier *name, NamedType *extends, 
-              List<NamedType*> *implements, List<Decl*> *members);
+public:
+  ClassDecl(Identifier *name, NamedType *extends,
+            List<NamedType *> *implements, List<Decl *> *members);
 };
 
-class InterfaceDecl : public Decl 
+class InterfaceDecl : public Decl
 {
-  protected:
-    List<Decl*> *members;
-    
-  public:
-    InterfaceDecl(Identifier *name, List<Decl*> *members);
+protected:
+  List<Decl *> *members;
+
+public:
+  InterfaceDecl(Identifier *name, List<Decl *> *members);
 };
 
-class FnDecl : public Decl 
+class FnDecl : public Decl
 {
-  protected:
-    List<VarDecl*> *formals;
-    Type *returnType;
-    Stmt *body;
-    
-  public:
-    FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
-    void SetFunctionBody(Stmt *b);
-    void Check();
+protected:
+  List<VarDecl *> *formals;
+  Type *returnType;
+  Stmt *body;
+
+public:
+  FnDecl(Identifier *name, Type *returnType, List<VarDecl *> *formals);
+  void SetFunctionBody(Stmt *b);
+  void Check();
 };
 
 #endif

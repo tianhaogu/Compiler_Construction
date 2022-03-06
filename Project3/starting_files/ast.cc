@@ -8,30 +8,38 @@
 #include <string.h> // strdup
 #include <stdio.h>  // printf
 
-Node::Node(yyltype loc) {
+Node::Node(yyltype loc)
+{
     location = new yyltype(loc);
     parent = NULL;
 }
 
-Node::Node() {
+Node::Node()
+{
     location = NULL;
     parent = NULL;
     scope = NULL;
 }
 
-Decl *Node::FindDecl(Identifier *id) {
+Decl *Node::FindDecl(Identifier *id)
+{
     scope = (scope == NULL) ? GetScope() : scope;
     Decl *d = scope->Find(id);
-    if (d) {
+    if (d)
+    {
         return d;
-    } else if (parent) {
+    }
+    else if (parent)
+    {
         return parent->FindDecl(id);
-    } else {
+    }
+    else
+    {
         return NULL;
     }
 }
-	 
-Identifier::Identifier(yyltype loc, const char *n) : Node(loc) {
-    name = strdup(n);
-} 
 
+Identifier::Identifier(yyltype loc, const char *n) : Node(loc)
+{
+    name = strdup(n);
+}
