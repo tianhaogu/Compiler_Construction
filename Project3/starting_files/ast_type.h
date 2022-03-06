@@ -32,17 +32,21 @@ class Type : public Node
     virtual void PrintToStream(std::ostream& out) { out << typeName; }
     friend std::ostream& operator<<(std::ostream& out, Type *t) { t->PrintToStream(out); return out; }
     virtual bool IsEquivalentTo(Type *other) { return this == other; }
+    virtual void Check() { }
+    virtual const char *GetTypeName() { return typeName; }
 };
 
 class NamedType : public Type 
 {
   protected:
     Identifier *id;
+    Decl *d;
     
   public:
     NamedType(Identifier *i);
     
     void PrintToStream(std::ostream& out) { out << id; }
+    // void Check();
 };
 
 class ArrayType : public Type 

@@ -24,6 +24,7 @@ class Program : public Node
 {
   protected:
      List<Decl*> *decls;
+     Scope *s;
      
   public:
      Program(List<Decl*> *declList);
@@ -35,6 +36,7 @@ class Stmt : public Node
   public:
      Stmt() : Node() {}
      Stmt(yyltype loc) : Node(loc) {}
+     virtual void Check() { }
 };
 
 class StmtBlock : public Stmt 
@@ -45,6 +47,7 @@ class StmtBlock : public Stmt
     
   public:
     StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
+    void Check();
 };
 
 class IntConst : public Stmt

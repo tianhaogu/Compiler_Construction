@@ -31,6 +31,7 @@
 
 #include <stdlib.h>   // for NULL
 #include "location.h"
+#include "scope.h"
 #include <iostream>
 
 class Node 
@@ -38,14 +39,18 @@ class Node
   protected:
     yyltype *location;
     Node *parent;
+    Scope *scope;
 
   public:
     Node(yyltype loc);
     Node();
     
-    yyltype *GetLocation()   { return location; }
-    void SetParent(Node *p)  { parent = p; }
-    Node *GetParent()        { return parent; }
+    yyltype *GetLocation()    { return location; }
+    void SetParent(Node *p)   { parent = p; }
+    Node *GetParent()         { return parent; }
+    Decl *FindDecl(Identifier *id);
+    virtual Scope *GetScope() { return NULL; }
+    virtual void Check()      { }
 };
    
 
@@ -57,6 +62,7 @@ class Identifier : public Node
   public:
     Identifier(yyltype loc, const char *name);
     friend std::ostream& operator<<(std::ostream& out, Identifier *id) { return out << id->name; }
+    const char *GetName() { return name; }
 };
 
 

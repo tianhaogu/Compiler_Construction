@@ -28,6 +28,9 @@ class Decl : public Node
   public:
     Decl(Identifier *name);
     friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
+    const char *GetName() { return id->GetName(); }
+
+    virtual void Check() { }
 };
 
 class VarDecl : public Decl 
@@ -37,6 +40,7 @@ class VarDecl : public Decl
     
   public:
     VarDecl(Identifier *name, Type *type);
+    void Check() { type->Check(); }
 };
 
 class ClassDecl : public Decl 
@@ -70,6 +74,7 @@ class FnDecl : public Decl
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
     void SetFunctionBody(Stmt *b);
+    void Check();
 };
 
 #endif

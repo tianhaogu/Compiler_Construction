@@ -46,5 +46,13 @@ void FnDecl::SetFunctionBody(Stmt *b) {
     (body=b)->SetParent(this);
 }
 
-
+void FnDecl::Check() {
+    returnType->Check();
+    if (body != NULL) {
+        scope = new Scope();
+        formals->DeclareAll(scope);
+        formals->CheckAll();
+        body->Check();
+    }
+}
 

@@ -16,6 +16,19 @@ Node::Node(yyltype loc) {
 Node::Node() {
     location = NULL;
     parent = NULL;
+    scope = NULL;
+}
+
+Decl *Node::FindDecl(Identifier *id) {
+    scope = (scope == NULL) ? GetScope() : scope;
+    Decl *d = scope->Find(id);
+    if (d) {
+        return d;
+    } else if (parent) {
+        return parent->FindDecl(id);
+    } else {
+        return NULL;
+    }
 }
 	 
 Identifier::Identifier(yyltype loc, const char *n) : Node(loc) {

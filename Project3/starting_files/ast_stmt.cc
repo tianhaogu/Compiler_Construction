@@ -6,6 +6,7 @@
 #include "ast_type.h"
 #include "ast_decl.h"
 #include "ast_expr.h"
+#include  "scope.h"
 
 
 Program::Program(List<Decl*> *d) {
@@ -21,12 +22,22 @@ void Program::Check() {
      *      checking itself, which makes for a great use of inheritance
      *      and polymorphism in the node classes.
      */
+    s = new Scope();
+    decls->DeclareAll(s);
+    decls->CheckAll();
 }
 
 StmtBlock::StmtBlock(List<VarDecl*> *d, List<Stmt*> *s) {
     Assert(d != NULL && s != NULL);
     (decls=d)->SetParentAll(this);
     (stmts=s)->SetParentAll(this);
+}
+
+void StmtBlock::Check() {
+    scope = new Scope();
+    decls->DeclareAll(scope);
+    decls->CheckAll();
+    stmts->CheckAll();
 }
 
 IntConst::IntConst(yyltype loc, int val) : Stmt(loc) {

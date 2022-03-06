@@ -12,7 +12,7 @@ PRODUCTS = $(COMPILER)
 default: $(PRODUCTS)
 
 # Set up the list of source and object files
-SRCS = ast.cc ast_decl.cc ast_expr.cc ast_stmt.cc ast_type.cc errors.cc utility.cc main.cc
+SRCS = scope.cc ast.cc ast_decl.cc ast_expr.cc ast_stmt.cc ast_type.cc errors.cc utility.cc main.cc
 
 # OBJS can deal with either .cc or .c files listed in SRCS
 OBJS = y.tab.o lex.yy.o $(patsubst %.cc, %.o, $(filter %.cc,$(SRCS))) $(patsubst %.c, %.o, $(filter %.c, $(SRCS)))
@@ -86,17 +86,18 @@ depend:
 	$(CC) -MM -MG $(SRCS) >> Makefile
 
 clean:
-	rm -f $(JUNK) y.output $(PRODUCTS)
+	rm -f $(JUNK) y.output $(PRODUCTS) ./samples/test*
 
 # DO NOT DELETE
-ast.o: ast.cc ast.h location.h ast_type.h list.h utility.h ast_decl.h
-ast_decl.o: ast_decl.cc ast_decl.h ast.h location.h ast_type.h list.h \
+scope.o: scope.cc scope.h hashtable.h list.h ast.h ast_decl.h
+ast.o: ast.cc ast.h scope.h location.h ast_type.h list.h utility.h ast_decl.h
+ast_decl.o: ast_decl.cc ast_decl.h scope.h ast.h location.h ast_type.h list.h \
  utility.h ast_stmt.h
-ast_expr.o: ast_expr.cc ast_expr.h ast.h location.h ast_stmt.h list.h \
+ast_expr.o: ast_expr.cc ast_expr.h scope.h ast.h location.h ast_stmt.h list.h \
  utility.h ast_type.h ast_decl.h errors.h
-ast_stmt.o: ast_stmt.cc ast_stmt.h list.h utility.h ast.h location.h \
+ast_stmt.o: ast_stmt.cc ast_stmt.h scope.h list.h utility.h ast.h location.h \
  ast_type.h ast_decl.h ast_expr.h
-ast_type.o: ast_type.cc ast_type.h ast.h location.h list.h utility.h \
+ast_type.o: ast_type.cc ast_type.h scope.h ast.h location.h list.h utility.h \
  ast_decl.h
 errors.o: errors.cc errors.h location.h scanner.h ast_type.h ast.h list.h \
  utility.h ast_expr.h ast_stmt.h ast_decl.h
