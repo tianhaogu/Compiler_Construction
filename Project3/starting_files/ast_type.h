@@ -51,6 +51,8 @@ public:
 
   void PrintToStream(std::ostream &out) { out << id; }
   void Check();
+  Decl *getDecl() { return d; }
+  Identifier *getID() { return id; }
 };
 
 class ArrayType : public Type

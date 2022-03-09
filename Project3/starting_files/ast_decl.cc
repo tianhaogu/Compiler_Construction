@@ -5,6 +5,7 @@
 #include "ast_decl.h"
 #include "ast_type.h"
 #include "ast_stmt.h"
+#include "errors.h"
 
 Decl::Decl(Identifier *n) : Node(*n->GetLocation())
 {
@@ -35,6 +36,25 @@ ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType *> *imp, List<
         extends->SetParent(this);
     (implements = imp)->SetParentAll(this);
     (members = m)->SetParentAll(this);
+}
+
+void ClassDecl::Check() 
+{
+    if (extends)
+    {   
+        Decl *d = extends->getDecl();
+        if (!(d && d->isClass()))
+        {
+            ReportError::IdentifierNotDeclared(extends->getID(), LookingForClass);
+            extends = NULL;
+        }
+    }
+    for (int i = 0; i < implements->NumElements(); ++i) {
+        NamedType *n = implements->Nth(i);
+
+
+
+    }
 }
 
 InterfaceDecl::InterfaceDecl(Identifier *n, List<Decl *> *m) : Decl(n)

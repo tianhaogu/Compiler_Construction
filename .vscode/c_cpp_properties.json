@@ -11,8 +11,9 @@
                 "_UNICODE"
             ],
             "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "macos-gcc-x86"
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-gcc-x86",
+            "compilerPath": "/usr/bin/gcc"
         }
     ],
     "version": 4

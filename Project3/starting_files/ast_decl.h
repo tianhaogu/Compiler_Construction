@@ -66,6 +66,8 @@ public:
   ClassDecl(Identifier *name, NamedType *extends,
             List<NamedType *> *implements, List<Decl *> *members);
   bool isClass() { return true; }
+  void Check();
+  Scope *getScope();
 };
 
 class InterfaceDecl : public Decl
