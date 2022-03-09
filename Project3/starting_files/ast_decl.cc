@@ -12,6 +12,14 @@ Decl::Decl(Identifier *n) : Node(*n->GetLocation())
     (id = n)->SetParent(this);
 }
 
+// bool Decl::ConflictsWithPrevious(Decl *prev)
+// {
+//     if (prev == NULL || prev == this)
+//         return false;
+//     ReportError::DeclConflict(this, prev);
+//     return true;
+// }
+
 VarDecl::VarDecl(Identifier *n, Type *t) : Decl(n)
 {
     Assert(n != NULL && t != NULL);
