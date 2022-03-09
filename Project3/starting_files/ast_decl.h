@@ -34,6 +34,14 @@ public:
   virtual bool isClass() { return false; }
   virtual bool isInter() { return false; }
   virtual bool isFunct() { return false; }
+  // virtual bool ConflictsWithPrevious(Decl *prev);
+
+  // virtual bool IsVarDecl() { return false; }
+  // virtual bool IsClassDecl() { return false; }
+  // virtual bool IsInterfaceDecl() { return false; }
+  // virtual bool IsFnDecl() { return false; }
+  // virtual bool IsMethodDecl() { return false; }
+  // virtual bool IsIvarDecl() { return false; }
 };
 
 class VarDecl : public Decl
