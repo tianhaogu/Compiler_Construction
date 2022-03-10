@@ -61,13 +61,16 @@ protected:
   List<Decl *> *members;
   NamedType *extends;
   List<NamedType *> *implements;
+  Type *t;
+
+  List<Scope *> *inters;
 
 public:
   ClassDecl(Identifier *name, NamedType *extends,
             List<NamedType *> *implements, List<Decl *> *members);
   bool isClass() { return true; }
   void Check();
-  Scope *getScope();
+  Scope *GetScope();
 };
 
 class InterfaceDecl : public Decl
@@ -78,6 +81,8 @@ protected:
 public:
   InterfaceDecl(Identifier *name, List<Decl *> *members);
   bool isInter() { return true; }
+  void Check();
+  Scope *GetScope();
 };
 
 class FnDecl : public Decl

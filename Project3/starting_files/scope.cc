@@ -9,6 +9,11 @@ Decl *Scope::Find(Identifier *id)
     return t.Lookup(id->GetName());
 }
 
+void Scope::Remove(Decl *d)
+{
+    t.Remove(d->GetName(), t.Lookup(d->GetName()));
+}
+
 bool Scope::Declare(Decl *d)
 {
     Decl *d_old = t.Lookup(d->GetName());
@@ -50,4 +55,9 @@ void Scope::Copy(Scope *s)
     {
         t.Enter(d->GetName(), d);
     }
+}
+
+int Scope::NumEntries() 
+{
+    return t.NumEntries();
 }

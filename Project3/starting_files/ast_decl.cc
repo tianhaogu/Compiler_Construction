@@ -36,31 +36,92 @@ ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType *> *imp, List<
         extends->SetParent(this);
     (implements = imp)->SetParentAll(this);
     (members = m)->SetParentAll(this);
+    t = new NamedType(n);
+    t->SetParent(this);
+    inters = NULL;
 }
 
 void ClassDecl::Check() 
 {
     if (extends)
     {   
-        Decl *d = extends->getDecl();
-        if (!(d && d->isClass()))
+        if (!(extends->getDecl() && extends->getDecl()->isClass()))
         {
             ReportError::IdentifierNotDeclared(extends->getID(), LookingForClass);
             extends = NULL;
         }
     }
-    for (int i = 0; i < implements->NumElements(); ++i) {
+    for (int i = 0; i < implements->NumElements(); ++i) 
+    {
         NamedType *n = implements->Nth(i);
-
-
-
+        if (!(n && n->getDecl() && n->getDecl()->isFunct())) 
+        {
+            ReportError::IdentifierNotDeclared(n->getID(), LookingForInterface);
+            implements->RemoveAt(i);
+            --i;
+        }
     }
+    GetScope();
+    for (int i = 0; i < members->NumElements(); ++i) 
+    {
+        Decl *d = members->Nth(i);
+        for (int j = 0; j < inters->NumElements(); ++j) 
+        {
+            inters->Nth(j)->Remove(d);
+        }
+    }
+    for (int i = 0; i < inters->NumElements(); ++i) 
+    {
+        if (inters->Nth(i)->NumEntries() > 0) 
+        {
+            ReportError::InterfaceNotImplemented(this, implements->Nth(i));
+        }
+    }
+    members->CheckAll();
+}
+
+Scope *ClassDecl::GetScope() 
+{
+    if (scope != NULL) {
+        return scope;
+    } else {
+        scope = new Scope();
+    }
+    if (extends)
+    {
+        scope->Copy(extends->GetScope());
+    }
+    inters = new List<Scope *>;
+    for (int i = 0; i < implements->NumElements(); ++i) {
+        inters->Append(new Scope());
+        inters->Nth(i)->Copy(implements->Nth(i)->GetScope());
+        scope->Copy(implements->Nth(i)->GetScope());
+    }
+    members->DeclareAll(scope);
+    return scope;
 }
 
 InterfaceDecl::InterfaceDecl(Identifier *n, List<Decl *> *m) : Decl(n)
 {
     Assert(n != NULL && m != NULL);
     (members = m)->SetParentAll(this);
+}
+
+void InterfaceDecl::Check()
+{
+    GetScope();
+    members->CheckAll();
+}
+
+Scope *InterfaceDecl::GetScope()
+{
+    if (scope)
+    {
+        return scope;
+    }
+    scope = new Scope();
+    members->DeclareAll(scope);
+    return scope;
 }
 
 FnDecl::FnDecl(Identifier *n, Type *r, List<VarDecl *> *d) : Decl(n)
