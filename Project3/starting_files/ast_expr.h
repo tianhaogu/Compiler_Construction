@@ -157,6 +157,7 @@ class LValue : public Expr
 {
 public:
   LValue(yyltype loc) : Expr(loc) {}
+  Type *CheckType();
 };
 
 class This : public Expr

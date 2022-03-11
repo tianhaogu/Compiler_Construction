@@ -199,6 +199,10 @@ Type *AssignExpr::CheckType()
     return l;
 }
 
+// Type *LValue::CheckType() {
+//     return Type::intType;
+// }
+
 ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc)
 {
     (base = b)->SetParent(this);
