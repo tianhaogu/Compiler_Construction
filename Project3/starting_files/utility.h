@@ -36,7 +36,7 @@ void Failure(const char *format, ...);
  *       ptr != NULL
  */ 
 #define Assert(expr)  \
-  ((expr) ? (void)0 : Failure("Assertion failed: %s, line %d:\n    %s", __FILE__, __LINE__, #expr))
+    ((expr) ? (void)0 : Failure("Assertion failed: %s, line %d:\n    %s", __FILE__, __LINE__, #expr))
 
 
 

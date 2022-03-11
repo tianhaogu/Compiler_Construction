@@ -99,6 +99,7 @@ public:
   bool IsEquivalentTo(FnDecl *fn);
   Type *GetType() { return returnType; }
   void Check();
+
 };
 
 #endif

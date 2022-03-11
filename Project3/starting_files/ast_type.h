@@ -64,6 +64,7 @@ public:
   ArrayType(yyltype loc, Type *elemType);
 
   void PrintToStream(std::ostream &out) { out << elemType << "[]"; }
+
 };
 
 #endif

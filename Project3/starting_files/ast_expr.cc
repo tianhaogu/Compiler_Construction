@@ -39,6 +39,7 @@ Operator::Operator(yyltype loc, const char *tok) : Node(loc)
     strncpy(tokenString, tok, sizeof(tokenString));
 }
 
+
 CompoundExpr::CompoundExpr(Expr *l, Operator *o, Expr *r)
     : Expr(Join(l->GetLocation(), r->GetLocation()))
 {
@@ -56,6 +57,7 @@ CompoundExpr::CompoundExpr(Operator *o, Expr *r)
     (op = o)->SetParent(this);
     (right = r)->SetParent(this);
 }
+
 
 CompoundExpr::CompoundExpr(Expr *l, Operator *o)
     : Expr(Join(l->GetLocation(), o->GetLocation()))

@@ -11,12 +11,11 @@
  * otherwise it just adds another entry under same key. Copies the
  * key, so you don't have to worry about its allocation.
  */
-template <class Value> void Hashtable<Value>::Enter(const char *key, Value val, bool overwrite)
-{
-  Value prev;
-  if (overwrite && (prev = Lookup(key)))
-    Remove(key, prev);
-  mmap.insert(std::make_pair(strdup(key), val));
+template <class Value> void Hashtable<Value>::Enter(const char *key, Value val, bool overwrite) {
+    Value prev;
+    if (overwrite && (prev = Lookup(key)))
+        Remove(key, prev);
+    mmap.insert(std::make_pair(strdup(key), val));
 }
 
  
@@ -25,20 +24,19 @@ template <class Value> void Hashtable<Value>::Enter(const char *key, Value val, 
  * Removes a given key-value pair from table. If no such pair, no
  * changes are made.  Does not affect any other entries under that key.
  */
-template <class Value> void Hashtable<Value>::Remove(const char *key, Value val)
-{
-  if (mmap.count(key) == 0) // no matches at all
-    return;
+template <class Value> void Hashtable<Value>::Remove(const char *key, Value val) {
+    if (mmap.count(key) == 0) // no matches at all
+        return;
 
-  typename std::multimap<const char *, Value>::iterator itr;
-  itr = mmap.find(key); // start at first occurrence
-  while (itr != mmap.upper_bound(key)) {
-    if (itr->second == val) { // iterate to find matching pair
-	mmap.erase(itr);
-	break;
+    typename std::multimap<const char *, Value>::iterator itr;
+    itr = mmap.find(key); // start at first occurrence
+    while (itr != mmap.upper_bound(key)) {
+        if (itr->second == val) { // iterate to find matching pair
+	        mmap.erase(itr);
+	        break;
+        }
+        ++itr;
     }
-    ++itr;
-  }
 } 
 
 
@@ -47,32 +45,30 @@ template <class Value> void Hashtable<Value>::Remove(const char *key, Value val)
  * Returns the value earlier stored under key or NULL
  *if there is no matching entry
  */
-template <class Value> Value Hashtable<Value>::Lookup(const char *key) 
-{
-  Value found = NULL;
+template <class Value> Value Hashtable<Value>::Lookup(const char *key) {
+    Value found = NULL;
   
-  if (mmap.count(key) > 0) {
-    typename std::multimap<const char *, Value>::iterator cur, last, prev;
-    cur = mmap.find(key); // start at first occurrence
-    last = mmap.upper_bound(key);
-    while (cur != last) { // iterate to find last entered
-	prev = cur; 
-	if (++cur == mmap.upper_bound(key)) { // have to go one too far
-	  found = prev->second; // one before last was it
-	  break;
-	}
+    if (mmap.count(key) > 0) {
+        typename std::multimap<const char *, Value>::iterator cur, last, prev;
+        cur = mmap.find(key); // start at first occurrence
+        last = mmap.upper_bound(key);
+        while (cur != last) { // iterate to find last entered
+	        prev = cur; 
+	        if (++cur == mmap.upper_bound(key)) { // have to go one too far
+	            found = prev->second; // one before last was it
+	            break;
+	        }
+        }
     }
-  }
-  return found;
+    return found;
 }
 
 
 /* Hashtable::NumEntries
  * ---------------------
  */
-template <class Value> int Hashtable<Value>::NumEntries() const
-{
-  return mmap.size();
+template <class Value> int Hashtable<Value>::NumEntries() const {
+    return mmap.size();
 }
 
 
@@ -81,9 +77,8 @@ template <class Value> int Hashtable<Value>::NumEntries() const
  * ---------------------
  * Returns iterator which can be used to walk through all values in table.
  */
-template <class Value> Iterator<Value> Hashtable<Value>::GetIterator() 
-{
-  return Iterator<Value>(mmap);
+template <class Value> Iterator<Value> Hashtable<Value>::GetIterator() {
+    return Iterator<Value>(mmap);
 }
 
 
@@ -92,8 +87,7 @@ template <class Value> Iterator<Value> Hashtable<Value>::GetIterator()
  * Iterator method used to return current value and advance iterator
  * to next entry. Returns null if no more values exist.
  */
-template <class Value> Value Iterator<Value>::GetNextValue()
-{
-  return (cur == end ? NULL : (*cur++).second);
+template <class Value> Value Iterator<Value>::GetNextValue() {
+    return (cur == end ? NULL : (*cur++).second);
 }
 

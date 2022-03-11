@@ -53,6 +53,7 @@ public:
   virtual void Check() {}
 };
 
+
 class Identifier : public Node
 {
 protected:
@@ -69,6 +70,7 @@ public:
 // is discarded along with the states being popped, and an instance of
 // the Error class can stand in as the placeholder in the parse tree
 // when your parser can continue after an error.
+
 class Error : public Node
 {
 public:
