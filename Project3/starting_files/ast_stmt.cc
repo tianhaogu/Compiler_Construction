@@ -104,6 +104,26 @@ ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc)
     (expr = e)->SetParent(this);
 }
 
+ReturnStmt::Check() {
+    expr-> Check();
+
+    Type *given = expr-> CheckType();
+    Type *expected = NULL;
+    Decl *d = NULL;
+    while (d-> GetParent() != NULL) {
+        d = d-> GetParent();
+        if (d-> isFunct()) {
+            break;
+        }
+    }
+    if (d-> isFunct()) {
+        expected = d-> GetType();
+    }
+    if (expected != NULL && (!given-> IsEquivalentTo(expected))) {
+        ReportError::ReturnMismatch(this, given, expected);
+    }
+}
+
 PrintStmt::PrintStmt(List<Expr *> *a)
 {
     Assert(a != NULL);

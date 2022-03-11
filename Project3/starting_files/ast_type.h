@@ -34,7 +34,7 @@ public:
     t->PrintToStream(out);
     return out;
   }
-  virtual bool IsEquivalentTo(Type *other) { return this == other; }
+  virtual bool IsEquivalentTo(Type *other) { return this-> GetTypeName() == other-> GetTypeName(); }
   virtual void Check() {}
   virtual const char *GetTypeName() { return typeName; }
 };

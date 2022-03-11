@@ -43,6 +43,7 @@ class StmtBlock : public Stmt
 protected:
   List<VarDecl *> *decls;
   List<Stmt *> *stmts;
+  Scope *scope;
 
 public:
   StmtBlock(List<VarDecl *> *variableDeclarations, List<Stmt *> *statements);
@@ -142,6 +143,7 @@ protected:
 
 public:
   ReturnStmt(yyltype loc, Expr *expr);
+  void Check();
 };
 
 class PrintStmt : public Stmt

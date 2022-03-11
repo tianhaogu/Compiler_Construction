@@ -82,6 +82,7 @@ public:
   void SetFunctionBody(Stmt *b);
   bool isFunct() { return true; }
   bool IsEquivalentTo(FnDecl *fn);
+  Type *GetType() { return returnType; }
   void Check();
 };
 
