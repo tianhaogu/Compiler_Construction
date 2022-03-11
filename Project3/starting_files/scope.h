@@ -14,8 +14,10 @@ protected:
 
 public:
   Decl *Find(Identifier *id);
+  void Remove(Decl *d);
   bool Declare(Decl *d);
   void Copy(Scope *s);
+  int NumEntries();
 };
 
 #endif

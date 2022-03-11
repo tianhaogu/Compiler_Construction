@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
@@ -12,7 +12,8 @@
             ],
             "cStandard": "c17",
             "cppStandard": "gnu++17",
-            "intelliSenseMode": "macos-gcc-x86"
+            "intelliSenseMode": "macos-gcc-x86",
+            "compilerPath": "C:/MinGW/bin/g++.exe"
         }
     ],
     "version": 4

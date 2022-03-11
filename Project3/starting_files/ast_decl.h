@@ -34,6 +34,14 @@ public:
   virtual bool isClass() { return false; }
   virtual bool isInter() { return false; }
   virtual bool isFunct() { return false; }
+  // virtual bool ConflictsWithPrevious(Decl *prev);
+
+  // virtual bool IsVarDecl() { return false; }
+  // virtual bool IsClassDecl() { return false; }
+  // virtual bool IsInterfaceDecl() { return false; }
+  // virtual bool IsFnDecl() { return false; }
+  // virtual bool IsMethodDecl() { return false; }
+  // virtual bool IsIvarDecl() { return false; }
 };
 
 class VarDecl : public Decl
@@ -53,11 +61,16 @@ protected:
   List<Decl *> *members;
   NamedType *extends;
   List<NamedType *> *implements;
+  Type *t;
+
+  List<Scope *> *inters;
 
 public:
   ClassDecl(Identifier *name, NamedType *extends,
             List<NamedType *> *implements, List<Decl *> *members);
   bool isClass() { return true; }
+  void Check();
+  Scope *GetScope();
 };
 
 class InterfaceDecl : public Decl
@@ -68,6 +81,8 @@ protected:
 public:
   InterfaceDecl(Identifier *name, List<Decl *> *members);
   bool isInter() { return true; }
+  void Check();
+  Scope *GetScope();
 };
 
 class FnDecl : public Decl
