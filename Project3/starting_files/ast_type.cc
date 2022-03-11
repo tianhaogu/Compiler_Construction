@@ -34,17 +34,22 @@ NamedType::NamedType(Identifier *i) : Type(*i->GetLocation())
     Assert(i != NULL);
     (id = i)->SetParent(this);
     d = NULL;
-    isError = false;
+    error = false;
 }
 
-void NamedType::Check() {
-    if (!d && !isError) {
+void NamedType::Check()
+{
+    if (!d && !isError)
+    {
         Decl *tempD = FindDecl(id);
-        if (tempD && (tempD->isClass() || tempD->isInter())) {
+        if (tempD && (tempD->isClass() || tempD->isInter()))
+        {
             d = tempD;
-        } else {
+        }
+        else
+        {
             ReportError::IdentifierNotDeclared(id, LookingForType);
-            isError = true;
+            error = true;
         }
     }
 }
@@ -53,4 +58,22 @@ ArrayType::ArrayType(yyltype loc, Type *et) : Type(loc)
 {
     Assert(et != NULL);
     (elemType = et)->SetParent(this);
+    error = false;
+}
+
+bool ArrayType::IsEquivalentTo(Type *t)
+{
+    if (strcmp(t->GetTypeName(), "[]"))
+    {
+        return false;
+    }
+    else
+    {
+        return elemType->IsEquivalentTo(dynamic_cast<ArrayType *>(t)->getElementType());
+    }
+}
+
+void ArrayType::Check()
+{
+    elemType->Check();
 }

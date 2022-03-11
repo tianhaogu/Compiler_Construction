@@ -199,10 +199,6 @@ Type *AssignExpr::CheckType()
     return l;
 }
 
-// Type *LValue::CheckType() {
-//     return Type::intType;
-// }
-
 ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc)
 {
     (base = b)->SetParent(this);
@@ -240,4 +236,22 @@ NewArrayExpr::NewArrayExpr(yyltype loc, Expr *sz, Type *et) : Expr(loc)
     Assert(sz != NULL && et != NULL);
     (size = sz)->SetParent(this);
     (elemType = et)->SetParent(this);
+}
+
+Type *NewArrayExpr::CheckType()
+{
+    Type *st = size->CheckType();
+    if (st && !st->IsEquivalentTo(Type::intType) && !st->IsEquivalentTo(Type::errorType))
+    {
+        ReportError::NewArraySizeNotInteger(size);
+    }
+    elemType->Check();
+    if (elemType->isError())
+    {
+        return Type::errorType;
+    }
+    else
+    {
+        return new ArrayType(*GetLocation(), elemType);
+    }
 }

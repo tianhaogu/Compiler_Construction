@@ -57,7 +57,7 @@ void Scope::Copy(Scope *s)
     }
 }
 
-int Scope::NumEntries() 
+int Scope::NumEntries()
 {
     return t.NumEntries();
 }

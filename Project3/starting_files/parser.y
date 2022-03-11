@@ -69,7 +69,7 @@ void yyerror(const char *msg); // standard error-handling routine
     SwitchStmt *switchstmt;
     CaseExpr *caseexpr;
     List<CaseExpr*> *caseList;
-    DefaultBrack *defaultbrack;
+    DefaultBlock *defaultblock;
     LValue *lvalue;
     Call *call;
     AssignExpr *assignexpr;
@@ -139,7 +139,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <varList>           VarDeclList
 %type <stmtList>          StmtList
 %type <stmt>              Stmt
-%type <expr>              ExprBrack
+%type <expr>              ExprBlock
 %type <ifstmt>            IfStmt
 %type <forstmt>           ForStmt
 %type <whilestmt>         WhileStmt
@@ -149,7 +149,7 @@ void yyerror(const char *msg); // standard error-handling routine
 %type <exprList>          ExprList
 %type <switchstmt>        SwitchStmt
 %type <caseexpr>          Case
-%type <defaultbrack>      DefaultBrack
+%type <defaultblock>      DefaultBlock
 %type <caseList>          CaseList
 %type <expr>              Expr
 %type <lvalue>            LValue
@@ -359,7 +359,7 @@ StmtList    :    StmtList Stmt   { ($$=$1)-> Append($2); }
             |    Stmt    { ($$=new List<Stmt*>)-> Append($1); }
             ;
 
-Stmt    :    ExprBrack ';'    { $$=$1; }
+Stmt    :    ExprBlock ';'    { $$=$1; }
         |    IfStmt    { $$=$1; }
         |    SwitchStmt    { $$=$1; }
         |    WhileStmt    { $$=$1; }
@@ -374,16 +374,16 @@ IfStmt    :    T_If '(' Expr ')' Stmt %prec WO_ELSE   { $$ = new IfStmt($3, $5, 
           |    T_If '(' Expr ')' Stmt T_Else Stmt    { $$ = new IfStmt($3, $5, $7); }
           ;
 
-ForStmt    :    T_For '(' ExprBrack ';' Expr ';' ExprBrack ')' Stmt    { $$ = new ForStmt($3, $5, $7, $9); }
+ForStmt    :    T_For '(' ExprBlock ';' Expr ';' ExprBlock ')' Stmt    { $$ = new ForStmt($3, $5, $7, $9); }
            ;
 
 WhileStmt    :    T_While '(' Expr ')' Stmt    { $$ = new WhileStmt($3, $5); }
              ;
 
-ReturnStmt    :    T_Return ExprBrack ';'    { $$ = new ReturnStmt(Join(@1, @2), $2); }
+ReturnStmt    :    T_Return ExprBlock ';'    { $$ = new ReturnStmt(Join(@1, @2), $2); }
               ;
 
-ExprBrack    :    Expr    { $$=$1; }
+ExprBlock    :    Expr    { $$=$1; }
              |        { $$ = new EmptyExpr(); }
              ;
 
@@ -397,7 +397,7 @@ ExprList    :    ExprList ',' Expr    { ($$=$1)-> Append($3); }
             |    Expr    { ($$ = new List<Expr*>)-> Append($1); }
             ;
 
-SwitchStmt    :    T_Switch '(' Expr ')' '{' CaseList DefaultBrack '}'    { $$ = new SwitchStmt($3, $6, $7); }
+SwitchStmt    :    T_Switch '(' Expr ')' '{' CaseList DefaultBlock '}'    { $$ = new SwitchStmt($3, $6, $7); }
               ;
 
 CaseList    :    CaseList Case    { ($$=$1)-> Append($2); }
@@ -414,7 +414,7 @@ Case    :    T_Case T_IntConstant ':' StmtList    {
         }
         ;
 
-DefaultBrack    :    T_Default ':' StmtList    { $$ = new DefaultBrack($3); }
+DefaultBlock    :    T_Default ':' StmtList    { $$ = new DefaultBlock($3); }
                 |           { $$ = NULL; }
                 ;
 

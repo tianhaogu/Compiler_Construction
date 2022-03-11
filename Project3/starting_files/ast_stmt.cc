@@ -7,6 +7,7 @@
 #include "ast_decl.h"
 #include "ast_expr.h"
 #include "scope.h"
+#include "errors.h"
 
 Program::Program(List<Decl *> *d)
 {
@@ -23,8 +24,8 @@ void Program::Check()
      *      checking itself, which makes for a great use of inheritance
      *      and polymorphism in the node classes.
      */
-    s = new Scope();
-    decls->DeclareAll(s);
+    scope = new Scope();
+    decls->DeclareAll(scope);
     decls->CheckAll();
 }
 
@@ -55,13 +56,25 @@ CaseExpr::CaseExpr(IntConst *t, List<Stmt *> *s)
     (stmts = s)->SetParentAll(this);
 }
 
-DefaultBrack::DefaultBrack(List<Stmt *> *s)
+void CaseExpr::Check()
+{
+    scope = new Scope();
+    stmts->CheckAll();
+}
+
+DefaultBlock::DefaultBlock(List<Stmt *> *s)
 {
     Assert(s != NULL);
     (stmts = s)->SetParentAll(this);
 }
 
-SwitchStmt::SwitchStmt(Expr *t, List<CaseExpr *> *s, DefaultBrack *d)
+void DefaultBlock::Check()
+{
+    scope = new Scope();
+    stmts->CheckAll();
+}
+
+SwitchStmt::SwitchStmt(Expr *t, List<CaseExpr *> *s, DefaultBlock *d)
 {
     Assert(t != NULL && s != NULL);
     (test = t)->SetParent(this);
@@ -74,6 +87,14 @@ SwitchStmt::SwitchStmt(Expr *t, List<CaseExpr *> *s, DefaultBrack *d)
     {
         defaultBody = NULL;
     }
+}
+
+void SwitchStmt::Check()
+{
+    scope = new Scope();
+    test->Check();
+    stmts->CheckAll();
+    defaultBody->Check();
 }
 
 ConditionalStmt::ConditionalStmt(Expr *t, Stmt *b)
@@ -90,6 +111,22 @@ ForStmt::ForStmt(Expr *i, Expr *t, Expr *s, Stmt *b) : LoopStmt(t, b)
     (step = s)->SetParent(this);
 }
 
+void ForStmt::Check()
+{
+    scope = new Scope();
+    init->Check();
+    test->Check();
+    step->Check();
+    body->Check();
+}
+
+void WhileStmt::Check()
+{
+    scope = new Scope();
+    test->Check();
+    body->Check();
+}
+
 IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb) : ConditionalStmt(t, tb)
 {
     Assert(t != NULL && tb != NULL); // else can be NULL
@@ -98,14 +135,65 @@ IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb) : ConditionalStmt(t, tb)
         elseBody->SetParent(this);
 }
 
+void IfStmt::Check()
+{
+    scope = new Scope();
+    test->Check();
+    body->Check();
+    if (elseBody)
+    {
+        elseBody->Check();
+    }
+}
+
+void BreakStmt::Check()
+{
+    scope = new Scope();
+    Node *p = parent;
+    while (p)
+    {
+        if (dynamic_cast<LoopStmt *>(p))
+        {
+            return;
+        }
+        p = p->GetParent();
+    }
+    ReportError::BreakOutsideLoop(this);
+}
+
 ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc)
 {
     Assert(e != NULL);
     (expr = e)->SetParent(this);
 }
 
+void ReturnStmt::Check()
+{
+    scope = new Scope();
+    Type *t = expr->CheckType();
+    Node *p = parent;
+    while (p)
+    {
+        if (dynamic_cast<FnDecl *>(p))
+        {
+            Type *returnType = dynamic_cast<FnDecl *>(p)->getReturnType();
+            if (!t->IsEquivalentTo(returnType))
+            {
+                ReportError::ReturnMismatch(this, t, returnType);
+            }
+            break;
+        }
+    }
+}
+
 PrintStmt::PrintStmt(List<Expr *> *a)
 {
     Assert(a != NULL);
     (args = a)->SetParentAll(this);
+}
+
+void PrintStmt::Check()
+{
+    scope = new Scope();
+    args->CheckAll();
 }

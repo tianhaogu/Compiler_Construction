@@ -37,6 +37,7 @@ public:
   virtual bool IsEquivalentTo(Type *other) { return this == other; }
   virtual void Check() {}
   virtual const char *GetTypeName() { return typeName; }
+  virtual bool isError() { return false; }
 };
 
 class NamedType : public Type
@@ -44,26 +45,35 @@ class NamedType : public Type
 protected:
   Identifier *id;
   Decl *d;
-  bool isError;
+  bool error;
 
 public:
   NamedType(Identifier *i);
 
+  bool IsEquivalentTo(Type *other) { return strcmp(this->GetTypeName(), other->GetTypeName()) == 0; }
   void PrintToStream(std::ostream &out) { out << id; }
   void Check();
   Decl *getDecl() { return d; }
   Identifier *getID() { return id; }
+  const char *GetTypeName() { return id->GetName(); }
+  bool isError() { return error; }
 };
 
 class ArrayType : public Type
 {
 protected:
   Type *elemType;
+  bool error;
 
 public:
   ArrayType(yyltype loc, Type *elemType);
 
   void PrintToStream(std::ostream &out) { out << elemType << "[]"; }
+  bool IsEquivalentTo(Type *other);
+  const char *GetTypeName() { return "[]"; }
+  Type *getElementType() { return elemType; }
+  bool isError() { return error; }
+  void Check();
 };
 
 #endif

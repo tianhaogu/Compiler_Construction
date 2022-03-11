@@ -41,20 +41,20 @@ ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType *> *imp, List<
     inters = NULL;
 }
 
-void ClassDecl::Check() 
+void ClassDecl::Check()
 {
     if (extends)
-    {   
+    {
         if (!(extends->getDecl() && extends->getDecl()->isClass()))
         {
             ReportError::IdentifierNotDeclared(extends->getID(), LookingForClass);
             extends = NULL;
         }
     }
-    for (int i = 0; i < implements->NumElements(); ++i) 
+    for (int i = 0; i < implements->NumElements(); ++i)
     {
         NamedType *n = implements->Nth(i);
-        if (!(n && n->getDecl() && n->getDecl()->isFunct())) 
+        if (!(n && n->getDecl() && n->getDecl()->isFunct()))
         {
             ReportError::IdentifierNotDeclared(n->getID(), LookingForInterface);
             implements->RemoveAt(i);
@@ -62,17 +62,17 @@ void ClassDecl::Check()
         }
     }
     GetScope();
-    for (int i = 0; i < members->NumElements(); ++i) 
+    for (int i = 0; i < members->NumElements(); ++i)
     {
         Decl *d = members->Nth(i);
-        for (int j = 0; j < inters->NumElements(); ++j) 
+        for (int j = 0; j < inters->NumElements(); ++j)
         {
             inters->Nth(j)->Remove(d);
         }
     }
-    for (int i = 0; i < inters->NumElements(); ++i) 
+    for (int i = 0; i < inters->NumElements(); ++i)
     {
-        if (inters->Nth(i)->NumEntries() > 0) 
+        if (inters->Nth(i)->NumEntries() > 0)
         {
             ReportError::InterfaceNotImplemented(this, implements->Nth(i));
         }
@@ -80,11 +80,14 @@ void ClassDecl::Check()
     members->CheckAll();
 }
 
-Scope *ClassDecl::GetScope() 
+Scope *ClassDecl::GetScope()
 {
-    if (scope != NULL) {
+    if (scope != NULL)
+    {
         return scope;
-    } else {
+    }
+    else
+    {
         scope = new Scope();
     }
     if (extends)
@@ -92,7 +95,8 @@ Scope *ClassDecl::GetScope()
         scope->Copy(extends->GetScope());
     }
     inters = new List<Scope *>;
-    for (int i = 0; i < implements->NumElements(); ++i) {
+    for (int i = 0; i < implements->NumElements(); ++i)
+    {
         inters->Append(new Scope());
         inters->Nth(i)->Copy(implements->Nth(i)->GetScope());
         scope->Copy(implements->Nth(i)->GetScope());

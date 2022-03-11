@@ -38,6 +38,8 @@ public:
 class EmptyExpr : public Expr
 {
 public:
+  Type *CheckType() { return Type::nullType; }
+  void Check() { }
 };
 
 class IntConstant : public Expr
@@ -157,13 +159,14 @@ class LValue : public Expr
 {
 public:
   LValue(yyltype loc) : Expr(loc) {}
-  Type *CheckType();
+  // TODO
 };
 
 class This : public Expr
 {
 public:
   This(yyltype loc) : Expr(loc) {}
+  // TODO
 };
 
 class ArrayAccess : public LValue
@@ -173,6 +176,7 @@ protected:
 
 public:
   ArrayAccess(yyltype loc, Expr *base, Expr *subscript);
+  // TODO
 };
 
 /* Note that field access is used both for qualified names
@@ -188,6 +192,7 @@ protected:
 
 public:
   FieldAccess(Expr *base, Identifier *field); //ok to pass NULL base
+  // TODO
 };
 
 /* Like field access, call is used both for qualified base.field()
@@ -203,6 +208,7 @@ protected:
 
 public:
   Call(yyltype loc, Expr *base, Identifier *field, List<Expr *> *args);
+  // TODO
 };
 
 class NewExpr : public Expr
@@ -212,6 +218,7 @@ protected:
 
 public:
   NewExpr(yyltype loc, NamedType *clsType);
+  // TODO
 };
 
 class NewArrayExpr : public Expr
@@ -222,18 +229,21 @@ protected:
 
 public:
   NewArrayExpr(yyltype loc, Expr *sizeExpr, Type *elemType);
+  Type *CheckType();
 };
 
 class ReadIntegerExpr : public Expr
 {
 public:
   ReadIntegerExpr(yyltype loc) : Expr(loc) {}
+  Type *CheckType() { return Type::intType; }
 };
 
 class ReadLineExpr : public Expr
 {
 public:
   ReadLineExpr(yyltype loc) : Expr(loc) {}
+  Type *CheckType() { return Type::stringType; }
 };
 
 #endif

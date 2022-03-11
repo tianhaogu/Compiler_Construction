@@ -23,7 +23,6 @@ class Program : public Node
 {
 protected:
   List<Decl *> *decls;
-  Scope *s;
 
 public:
   Program(List<Decl *> *declList);
@@ -66,15 +65,17 @@ protected:
 
 public:
   CaseExpr(IntConst *test, List<Stmt *> *stmts);
+  void Check();
 };
 
-class DefaultBrack : public Stmt
+class DefaultBlock : public Stmt
 {
 protected:
   List<Stmt *> *stmts;
 
 public:
-  DefaultBrack(List<Stmt *> *stmts);
+  DefaultBlock(List<Stmt *> *stmts);
+  void Check();
 };
 
 class SwitchStmt : public Stmt
@@ -82,10 +83,11 @@ class SwitchStmt : public Stmt
 protected:
   Expr *test;
   List<CaseExpr *> *stmts;
-  DefaultBrack *defaultBody;
+  DefaultBlock *defaultBody;
 
 public:
-  SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBrack *defaultBody);
+  SwitchStmt(Expr *testExpr, List<CaseExpr *> *statements, DefaultBlock *defaultBody);
+  void Check();
 };
 
 class ConditionalStmt : public Stmt
@@ -112,12 +114,14 @@ protected:
 
 public:
   ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
+  void Check();
 };
 
 class WhileStmt : public LoopStmt
 {
 public:
   WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
+  void Check();
 };
 
 class IfStmt : public ConditionalStmt
@@ -127,12 +131,14 @@ protected:
 
 public:
   IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
+  void Check();
 };
 
 class BreakStmt : public Stmt
 {
 public:
   BreakStmt(yyltype loc) : Stmt(loc) {}
+  void Check();
 };
 
 class ReturnStmt : public Stmt
@@ -142,6 +148,7 @@ protected:
 
 public:
   ReturnStmt(yyltype loc, Expr *expr);
+  void Check();
 };
 
 class PrintStmt : public Stmt
@@ -151,6 +158,7 @@ protected:
 
 public:
   PrintStmt(List<Expr *> *arguments);
+  void Check();
 };
 
 #endif

@@ -1,19 +1,16 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
+            "defines": [],
+            "macFrameworkPath": [],
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "macos-gcc-x86",
-            "compilerPath": "C:/MinGW/bin/g++.exe"
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-gcc-x86"
         }
     ],
     "version": 4

@@ -5,8 +5,8 @@
  * specialized for declarations of variables, functions, classes,
  * and interfaces.
  *
- * pp3: You will need to extend the Decl classes to implement 
- * semantic processing including detection of declaration conflicts 
+ * pp3: You will need to extend the Decl classes to implement
+ * semantic processing including detection of declaration conflicts
  * and managing scoping issues.
  */
 
@@ -51,7 +51,7 @@ protected:
 
 public:
   VarDecl(Identifier *name, Type *type);
-  Type *GetType() {return type; }
+  Type *GetType() { return type; }
   void Check() { type->Check(); }
 };
 
@@ -98,6 +98,7 @@ public:
   bool isFunct() { return true; }
   bool IsEquivalentTo(FnDecl *fn);
   void Check();
+  Type *getReturnType() { return returnType; }
 };
 
 #endif
