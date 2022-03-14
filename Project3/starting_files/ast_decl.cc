@@ -39,13 +39,15 @@ ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType *> *imp, List<
     t = new NamedType(n);
     t->SetParent(this);
     inters = NULL;
+    scope = NULL;
 }
 
 void ClassDecl::Check()
 {
     if (extends)
     {
-        if (!(extends->getDecl() && extends->getDecl()->isClass()))
+        Decl *d = parent->FindDecl(extends->getID());
+        if (!(d && d->isClass()))
         {
             ReportError::IdentifierNotDeclared(extends->getID(), LookingForClass);
             extends = NULL;
@@ -54,7 +56,7 @@ void ClassDecl::Check()
     for (int i = 0; i < implements->NumElements(); ++i)
     {
         NamedType *n = implements->Nth(i);
-        Decl *d = FindDecl(n->getID());
+        Decl *d = parent->FindDecl(n->getID());
         if (!(n && d && d->isInter()))
         {
             ReportError::IdentifierNotDeclared(n->getID(), LookingForInterface);
@@ -68,6 +70,13 @@ void ClassDecl::Check()
         Decl *d = members->Nth(i);
         for (int j = 0; j < inters->NumElements(); ++j)
         {
+            // Decl *d_old = inters->Nth(j)->Find(d->getID());
+            // if (dynamic_cast<FnDecl *>(d) && 
+            //     dynamic_cast<FnDecl *>(d_old) && 
+            //     !dynamic_cast<FnDecl *>(d)->IsEquivalentTo(dynamic_cast<FnDecl *>(d_old)))
+            // {
+            //     ReportError::OverrideMismatch(d);
+            // }
             inters->Nth(j)->Remove(d);
         }
     }
@@ -78,11 +87,13 @@ void ClassDecl::Check()
             ReportError::InterfaceNotImplemented(this, implements->Nth(i));
         }
     }
+    members->DeclareAll(scope, true);
     members->CheckAll();
 }
 
 Scope *ClassDecl::GetScope()
 {
+    scope = NULL;
     if (scope != NULL)
     {
         return scope;
@@ -93,16 +104,18 @@ Scope *ClassDecl::GetScope()
     }
     if (extends)
     {
-        scope->Copy(extends->GetScope());
+        Decl *d = parent->FindDecl(extends->getID());
+        scope->Copy(d->GetScope());
     }
     inters = new List<Scope *>;
     for (int i = 0; i < implements->NumElements(); ++i)
     {
         inters->Append(new Scope());
-        inters->Nth(i)->Copy(implements->Nth(i)->GetScope());
-        scope->Copy(implements->Nth(i)->GetScope());
+        NamedType *n = implements->Nth(i);
+        Decl *d = parent->FindDecl(n->getID());
+        inters->Nth(i)->Copy(d->GetScope());
+        scope->Copy(d->GetScope());
     }
-    members->DeclareAll(scope);
     return scope;
 }
 

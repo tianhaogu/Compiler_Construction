@@ -16,7 +16,7 @@ public:
   Scope() { t = new Hashtable<Decl *>; }
   Decl *Find(Identifier *id);
   void Remove(Decl *d);
-  bool Declare(Decl *d);
+  bool Declare(Decl *d, bool flag = false);
   void Copy(Scope *s);
   int NumEntries();
 };

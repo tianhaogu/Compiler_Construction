@@ -16,7 +16,7 @@ void Scope::Remove(Decl *d)
     t->Remove(d->GetName(), t->Lookup(d->GetName()));
 }
 
-bool Scope::Declare(Decl *d)
+bool Scope::Declare(Decl *d, bool flag)
 {
     Decl *d_old = t->Lookup(d->GetName());
     if (d_old)
@@ -25,12 +25,16 @@ bool Scope::Declare(Decl *d)
              dynamic_cast<InterfaceDecl *>(d->GetParent()) != NULL) &&
             (dynamic_cast<ClassDecl *>(d_old->GetParent()) != NULL ||
              dynamic_cast<InterfaceDecl *>(d_old->GetParent()) != NULL) &&
-            d->GetParent() != d_old->GetParent())
+            (d->GetParent() != d_old->GetParent() || flag))
         {
             FnDecl *fn = dynamic_cast<FnDecl *>(d);
             FnDecl *fn_old = dynamic_cast<FnDecl *>(d_old);
             if (fn->IsEquivalentTo(fn_old))
             {
+                if (flag)
+                {
+                    t->Remove(d->GetName(), t->Lookup(d->GetName()));
+                }
                 t->Enter(d->GetName(), d);
                 return true;
             }

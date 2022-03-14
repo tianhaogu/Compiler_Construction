@@ -25,7 +25,7 @@ public:
   static Type *intType, *doubleType, *boolType, *voidType,
       *nullType, *stringType, *errorType;
 
-  Type(yyltype loc) : Node(loc) {}
+  Type(yyltype loc) : Node(loc) { scope = new Scope(); }
   Type(const char *str);
 
   virtual void PrintToStream(std::ostream &out) { out << typeName; }

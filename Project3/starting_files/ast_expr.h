@@ -26,7 +26,7 @@ protected:
   Type *t;
 
 public:
-  Expr(yyltype loc) : Stmt(loc) { t = NULL; }
+  Expr(yyltype loc) : Stmt(loc) { t = NULL; scope = new Scope(); }
   Expr() : Stmt() {}
   virtual Type *CheckType() { return t; }
   virtual void Check() { CheckType(); }

@@ -92,10 +92,10 @@ public:
             Nth(i)->SetParent(p);
     }
 
-    void DeclareAll(Scope *s)
+    void DeclareAll(Scope *s, bool flag = false)
     {
         for (int i = 0; i < NumElements(); i++)
-            s->Declare(Nth(i));
+            s->Declare(Nth(i), flag);
     }
 
     void CheckAll()

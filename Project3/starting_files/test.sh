@@ -10,7 +10,6 @@ do
     DIFF=$(diff -w samples/$file.out samples/test_$file.out)
     if [ "$DIFF" != "" ]
     then
-        echo $DIFF
         echo $file
         break
     fi

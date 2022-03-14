@@ -29,6 +29,7 @@ public:
   Decl(Identifier *name);
   friend std::ostream &operator<<(std::ostream &out, Decl *d) { return out << d->id; }
   const char *GetName() { return id->GetName(); }
+  Identifier *getID() { return id; }
 
   virtual void Check() {}
   virtual bool isClass() { return false; }
@@ -52,7 +53,7 @@ protected:
 public:
   VarDecl(Identifier *name, Type *type);
   Type *GetType() { return type; }
-  void Check() { type->Check(); }
+  void Check() { scope = new Scope(); type->Check(); }
 };
 
 class ClassDecl : public Decl
