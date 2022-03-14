@@ -71,6 +71,7 @@ public:
   bool isClass() { return true; }
   void Check();
   Scope *GetScope();
+  Type *GetType() { return t; }
 };
 
 class InterfaceDecl : public Decl

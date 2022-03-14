@@ -10,9 +10,10 @@ class ClassDecl;
 class Scope
 {
 protected:
-  Hashtable<Decl *> t;
+  Hashtable<Decl *> *t;
 
 public:
+  Scope() { t = new Hashtable<Decl *>; }
   Decl *Find(Identifier *id);
   void Remove(Decl *d);
   bool Declare(Decl *d);

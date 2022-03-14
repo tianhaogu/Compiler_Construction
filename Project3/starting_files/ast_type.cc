@@ -39,7 +39,7 @@ NamedType::NamedType(Identifier *i) : Type(*i->GetLocation())
 
 void NamedType::Check()
 {
-    if (!d && !isError)
+    if (!d && !error)
     {
         Decl *tempD = FindDecl(id);
         if (tempD && (tempD->isClass() || tempD->isInter()))

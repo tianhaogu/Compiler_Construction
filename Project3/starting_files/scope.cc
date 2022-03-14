@@ -6,17 +6,19 @@
 
 Decl *Scope::Find(Identifier *id)
 {
-    return t.Lookup(id->GetName());
+    const char *c = id->GetName();
+
+    return t->Lookup(id->GetName());
 }
 
 void Scope::Remove(Decl *d)
 {
-    t.Remove(d->GetName(), t.Lookup(d->GetName()));
+    t->Remove(d->GetName(), t->Lookup(d->GetName()));
 }
 
 bool Scope::Declare(Decl *d)
 {
-    Decl *d_old = t.Lookup(d->GetName());
+    Decl *d_old = t->Lookup(d->GetName());
     if (d_old)
     {
         if ((dynamic_cast<ClassDecl *>(d->GetParent()) != NULL ||
@@ -29,7 +31,7 @@ bool Scope::Declare(Decl *d)
             FnDecl *fn_old = dynamic_cast<FnDecl *>(d_old);
             if (fn->IsEquivalentTo(fn_old))
             {
-                t.Enter(d->GetName(), d);
+                t->Enter(d->GetName(), d);
                 return true;
             }
             else
@@ -44,20 +46,20 @@ bool Scope::Declare(Decl *d)
             return false;
         }
     }
-    t.Enter(d->GetName(), d);
+    t->Enter(d->GetName(), d);
     return true;
 }
 
 void Scope::Copy(Scope *s)
 {
-    Iterator<Decl *> i = s->t.GetIterator();
+    Iterator<Decl *> i = s->t->GetIterator();
     for (Decl *d = i.GetNextValue(); d != NULL; d = i.GetNextValue())
     {
-        t.Enter(d->GetName(), d);
+        t->Enter(d->GetName(), d);
     }
 }
 
 int Scope::NumEntries()
 {
-    return t.NumEntries();
+    return t->NumEntries();
 }

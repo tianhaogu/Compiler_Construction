@@ -159,14 +159,13 @@ class LValue : public Expr
 {
 public:
   LValue(yyltype loc) : Expr(loc) {}
-  // TODO
 };
 
 class This : public Expr
 {
 public:
   This(yyltype loc) : Expr(loc) {}
-  // TODO
+  Type *CheckType();
 };
 
 class ArrayAccess : public LValue
@@ -177,6 +176,7 @@ protected:
 public:
   ArrayAccess(yyltype loc, Expr *base, Expr *subscript);
   // TODO
+  // Type *CheckType();
 };
 
 /* Note that field access is used both for qualified names
@@ -192,7 +192,7 @@ protected:
 
 public:
   FieldAccess(Expr *base, Identifier *field); //ok to pass NULL base
-  // TODO
+  Type *CheckType();
 };
 
 /* Like field access, call is used both for qualified base.field()
@@ -218,7 +218,7 @@ protected:
 
 public:
   NewExpr(yyltype loc, NamedType *clsType);
-  // TODO
+  Type *CheckType();
 };
 
 class NewArrayExpr : public Expr

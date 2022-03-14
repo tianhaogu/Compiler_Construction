@@ -49,7 +49,7 @@ public:
   void SetParent(Node *p) { parent = p; }
   Node *GetParent() { return parent; }
   Decl *FindDecl(Identifier *id);
-  virtual Scope *GetScope() { return NULL; }
+  virtual Scope *GetScope() { return scope; }
   virtual void Check() {}
 };
 

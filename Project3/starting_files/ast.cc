@@ -12,13 +12,14 @@ Node::Node(yyltype loc)
 {
     location = new yyltype(loc);
     parent = NULL;
+    scope = new Scope();
 }
 
 Node::Node()
 {
     location = NULL;
     parent = NULL;
-    scope = NULL;
+    scope = new Scope();
 }
 
 Decl *Node::FindDecl(Identifier *id)

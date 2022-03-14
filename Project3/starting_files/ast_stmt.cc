@@ -183,6 +183,7 @@ void ReturnStmt::Check()
             }
             break;
         }
+        p = p->GetParent();
     }
 }
 

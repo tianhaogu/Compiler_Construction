@@ -54,7 +54,8 @@ void ClassDecl::Check()
     for (int i = 0; i < implements->NumElements(); ++i)
     {
         NamedType *n = implements->Nth(i);
-        if (!(n && n->getDecl() && n->getDecl()->isFunct()))
+        Decl *d = FindDecl(n->getID());
+        if (!(n && d && d->isInter()))
         {
             ReportError::IdentifierNotDeclared(n->getID(), LookingForInterface);
             implements->RemoveAt(i);
