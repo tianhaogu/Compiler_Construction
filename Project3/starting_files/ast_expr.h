@@ -175,8 +175,7 @@ protected:
 
 public:
   ArrayAccess(yyltype loc, Expr *base, Expr *subscript);
-  // TODO
-  // Type *CheckType();
+  Type *CheckType();
 };
 
 /* Note that field access is used both for qualified names

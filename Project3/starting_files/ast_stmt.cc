@@ -92,7 +92,11 @@ SwitchStmt::SwitchStmt(Expr *t, List<CaseExpr *> *s, DefaultBlock *d)
 void SwitchStmt::Check()
 {
     scope = new Scope();
-    test->Check();
+    Type *t = test->CheckType();
+    if (!t->IsEquivalentTo(Type::intType))
+    {
+        ReportError::TestNotBoolean(test);
+    }
     stmts->CheckAll();
     defaultBody->Check();
 }
@@ -115,7 +119,11 @@ void ForStmt::Check()
 {
     scope = new Scope();
     init->Check();
-    test->Check();
+    Type *t = test->CheckType();
+    if (!t->IsEquivalentTo(Type::boolType))
+    {
+        ReportError::TestNotBoolean(test);
+    }
     step->Check();
     body->Check();
 }
@@ -123,7 +131,11 @@ void ForStmt::Check()
 void WhileStmt::Check()
 {
     scope = new Scope();
-    test->Check();
+    Type *t = test->CheckType();
+    if (!t->IsEquivalentTo(Type::boolType))
+    {
+        ReportError::TestNotBoolean(test);
+    }
     body->Check();
 }
 
@@ -138,7 +150,11 @@ IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb) : ConditionalStmt(t, tb)
 void IfStmt::Check()
 {
     scope = new Scope();
-    test->Check();
+    Type *t = test->CheckType();
+    if (!t->IsEquivalentTo(Type::boolType))
+    {
+        ReportError::TestNotBoolean(test);
+    }
     body->Check();
     if (elseBody)
     {

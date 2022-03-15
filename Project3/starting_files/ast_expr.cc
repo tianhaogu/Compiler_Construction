@@ -258,6 +258,35 @@ ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc)
     (subscript = s)->SetParent(this);
 }
 
+Type *ArrayAccess::CheckType()
+{
+    if (t)
+    {
+        return t;
+    }
+    Type *tempType;
+    tempType = base->CheckType();
+    if (dynamic_cast<ArrayType *>(tempType) == NULL)
+    {
+        ReportError::BracketsOnNonArray(base);
+    }
+    tempType = subscript->CheckType();
+    if (!tempType->IsEquivalentTo(Type::intType))
+    {
+        ReportError::SubscriptNotInteger(subscript);
+    }
+    tempType = base->CheckType();
+    if (dynamic_cast<ArrayType *>(tempType) == NULL)
+    {
+        t = Type::errorType;
+    }
+    else
+    {
+        t = dynamic_cast<ArrayType *>(tempType)->getElementType();
+    }
+    return t;
+}
+
 FieldAccess::FieldAccess(Expr *b, Identifier *f)
     : LValue(b ? Join(b->GetLocation(), f->GetLocation()) : *f->GetLocation())
 {
@@ -274,15 +303,22 @@ Type *FieldAccess::CheckType()
     {
         return t;
     }
-    Decl *d;
-    Type *ctype;
+    Decl *d = NULL;
+    Type *cType = NULL;
     if (base)
     {
-        ctype = base->CheckType();
-        d = ctype->FindDecl(field);
+        cType = base->CheckType();
+        if (cType != NULL)
+        {
+            NamedType *nType = dynamic_cast<NamedType *>(cType);
+            if (nType != NULL)
+            {
+                d = FindDecl(nType->getID());
+            }
+        }
         if (d == NULL)
         {
-            ReportError::FieldNotFoundInBase(field, ctype);
+            ReportError::FieldNotFoundInBase(field, cType);
             t = Type::errorType;
             return t;
         }
@@ -299,7 +335,7 @@ Type *FieldAccess::CheckType()
         }
         if (!inClass)
         {
-            ReportError::InaccessibleField(field, ctype);
+            ReportError::InaccessibleField(field, cType);
             t = Type::errorType;
             return t;
         }
@@ -319,11 +355,11 @@ Type *FieldAccess::CheckType()
         }
         if (inClass)
         {
-            ctype = dynamic_cast<ClassDecl *>(p)->GetType();
+            cType = dynamic_cast<ClassDecl *>(p)->GetType();
             d = FindDecl(field);
             if (d == NULL)
             {
-                ReportError::FieldNotFoundInBase(field, ctype);
+                ReportError::FieldNotFoundInBase(field, cType);
                 t = Type::errorType;
                 return t;
             }
