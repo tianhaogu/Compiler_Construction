@@ -163,7 +163,10 @@ Type *EqualityExpr::CheckType()
     }
     Type *l = left->CheckType();
     Type *r = right->CheckType();
-    if (!r->IsEquivalentTo(l) && !l->IsEquivalentTo(r))
+    if (!r->IsEquivalentTo(l) && 
+        !l->IsEquivalentTo(r) && 
+        !l->IsEquivalentTo(Type::errorType) && 
+        !r->IsEquivalentTo(Type::errorType))
     {
         ReportError::IncompatibleOperands(op, l, r);
     }
@@ -271,7 +274,8 @@ Type *ArrayAccess::CheckType()
         ReportError::BracketsOnNonArray(base);
     }
     tempType = subscript->CheckType();
-    if (!tempType->IsEquivalentTo(Type::intType))
+    if (!tempType->IsEquivalentTo(Type::intType) &&
+        !tempType->IsEquivalentTo(Type::errorType))
     {
         ReportError::SubscriptNotInteger(subscript);
     }
@@ -308,15 +312,23 @@ Type *FieldAccess::CheckType()
     if (base)
     {
         cType = base->CheckType();
-        if (cType != NULL)
+        if (cType->IsEquivalentTo(Type::errorType))
         {
-            NamedType *nType = dynamic_cast<NamedType *>(cType);
-            if (nType != NULL)
-            {
-                d = FindDecl(nType->getID());
-            }
+            t = Type::errorType;
+            return t;
         }
-        if (d == NULL)
+        NamedType *nType = dynamic_cast<NamedType *>(cType);
+        if (nType != NULL)
+        {
+            d = FindDecl(nType->getID());
+        }
+        if (nType != NULL && d == NULL)
+        {
+            ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
+            t = Type::errorType;
+            return t;
+        }
+        if (d == NULL || d->FindDecl(field) == NULL)
         {
             ReportError::FieldNotFoundInBase(field, cType);
             t = Type::errorType;
@@ -397,6 +409,162 @@ Call::Call(yyltype loc, Expr *b, Identifier *f, List<Expr *> *a) : Expr(loc)
         base->SetParent(this);
     (field = f)->SetParent(this);
     (actuals = a)->SetParentAll(this);
+}
+
+Type *Call::CheckType()
+{
+    if (t)
+    {
+        return t;
+    }
+    Decl *d = NULL;
+    Type *cType = NULL;
+    if (base)
+    {
+        cType = base->CheckType();
+        if (cType->IsEquivalentTo(Type::errorType))
+        {
+            for (int i = 0; i < actuals->NumElements(); ++i)
+            {
+                actuals->Nth(i)->Check();
+            }
+            t = Type::errorType;
+            return t;
+        }
+        NamedType *nType = dynamic_cast<NamedType *>(cType);
+        if (nType != NULL)
+        {
+            d = FindDecl(nType->getID());
+        }
+        if (nType != NULL && d == NULL)
+        {
+            ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
+            for (int i = 0; i < actuals->NumElements(); ++i)
+            {
+                actuals->Nth(i)->Check();
+            }
+            t = Type::errorType;
+            return t;
+        }
+        if (d == NULL || d->FindDecl(field) == NULL)
+        {
+            ReportError::FieldNotFoundInBase(field, cType);
+            for (int i = 0; i < actuals->NumElements(); ++i)
+            {
+                actuals->Nth(i)->Check();
+            }
+            t = Type::errorType;
+            return t;
+        }
+
+
+
+
+
+        // cType = base->CheckType();
+        // if (cType->IsEquivalentTo(Type::errorType))
+        // {
+        //     for (int i = 0; i < actuals->NumElements(); ++i)
+        //     {
+        //         actuals->Nth(i)->Check();
+        //     }
+        //     t = Type::errorType;
+        //     return t;
+        // }
+        // NamedType *nType = dynamic_cast<NamedType *>(cType);
+        // if (nType != NULL)
+        // {
+        //     d = FindDecl(nType->getID());
+        // }
+        // if (d == NULL)
+        // {
+        //     ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
+        //     for (int i = 0; i < actuals->NumElements(); ++i)
+        //     {
+        //         actuals->Nth(i)->Check();
+        //     }
+        //     t = Type::errorType;
+        //     return t;
+        // }
+        // d = d->FindDecl(field);
+        // if (d == NULL)
+        // {
+        //     ReportError::FieldNotFoundInBase(field, cType);
+        //     t = Type::errorType;
+        //     return t;
+        // }
+    }
+    else
+    {
+        // bool inClass = false;
+        // Node *p = parent;
+        // while (p)
+        // {
+        //     if (dynamic_cast<ClassDecl *>(p))
+        //     {
+        //         // inClass = true;
+        //         break;
+        //     }
+        //     p = p->GetParent();
+        // }
+        // if (inClass)
+        // {
+        //     cType = dynamic_cast<ClassDecl *>(p)->GetType();
+        //     d = FindDecl(field);
+        //     if (d == NULL)
+        //     {
+        //         ReportError::FieldNotFoundInBase(field, cType);
+        //         t = Type::errorType;
+        //         return t;
+        //     }
+        // }
+        // else
+        // {
+        const char *w = field->GetName();
+        d = FindDecl(field);
+        if (d == NULL)
+        {
+            ReportError::IdentifierNotDeclared(field, LookingForFunction);
+            t = Type::errorType;
+            return t;
+        }
+        // }
+    }
+
+    if (dynamic_cast<FnDecl *>(d) == NULL)
+    {
+        ReportError::IdentifierNotDeclared(field, LookingForFunction);
+        t = Type::errorType;
+    }
+    else
+    {
+        FnDecl *f = dynamic_cast<FnDecl *>(d);
+        t = f->getReturnType();
+        List<VarDecl *> *f_formals = f->getFormals();
+        int num_actual = actuals->NumElements();
+        int num_expect = f_formals->NumElements();
+        if (num_actual != num_expect)
+        {
+            ReportError::NumArgsMismatch(field, num_expect, num_actual);
+        }
+        int num_comp = num_actual > num_expect ? num_expect : num_actual;
+        for (int i = 0; i < num_comp; ++i)
+        {
+            Type *t_actual = actuals->Nth(i)->CheckType();
+            Type *t_expect = f_formals->Nth(i)->GetType();
+            if (!t_actual->IsEquivalentTo(Type::errorType) &&
+                !t_expect->IsEquivalentTo(Type::errorType) &&
+                !t_expect->IsEquivalentTo(t_actual))
+            {
+                ReportError::ArgMismatch(actuals->Nth(i), i+1, t_actual, t_expect);
+            }
+        }
+        for (int i = num_comp; i < num_actual; ++i)
+        {
+            actuals->Nth(i)->Check();
+        }
+    }
+    return t;
 }
 
 NewExpr::NewExpr(yyltype loc, NamedType *c) : Expr(loc)

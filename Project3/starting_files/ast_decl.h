@@ -53,7 +53,7 @@ protected:
 public:
   VarDecl(Identifier *name, Type *type);
   Type *GetType() { return type; }
-  void Check() { scope = new Scope(); type->Check(); }
+  void Check() { scope = new Scope(); type->Check(); if (type->isError()) { type = Type::errorType; } }
 };
 
 class ClassDecl : public Decl
@@ -101,6 +101,7 @@ public:
   bool IsEquivalentTo(FnDecl *fn);
   void Check();
   Type *getReturnType() { return returnType; }
+  List<VarDecl *> *getFormals() { return formals; }
 };
 
 #endif

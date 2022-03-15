@@ -380,7 +380,7 @@ ForStmt    :    T_For '(' ExprBlock ';' Expr ';' ExprBlock ')' Stmt    { $$ = ne
 WhileStmt    :    T_While '(' Expr ')' Stmt    { $$ = new WhileStmt($3, $5); }
              ;
 
-ReturnStmt    :    T_Return ExprBlock ';'    { $$ = new ReturnStmt(Join(@1, @2), $2); }
+ReturnStmt    :    T_Return ExprBlock ';'    { $$ = new ReturnStmt(@2, $2); }
               ;
 
 ExprBlock    :    Expr    { $$=$1; }
@@ -538,7 +538,7 @@ LogicalExpr    :    Expr T_And Expr    {
                    $$ = new LogicalExpr($1, or_, $3);
                }
                |    '!' Expr    {
-                   Operator *not_ = new Operator(@2, "!");
+                   Operator *not_ = new Operator(@1, "!");
                    $$ = new LogicalExpr(not_, $2);
                }
                ;

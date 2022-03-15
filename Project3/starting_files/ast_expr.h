@@ -207,7 +207,7 @@ protected:
 
 public:
   Call(yyltype loc, Expr *base, Identifier *field, List<Expr *> *args);
-  // TODO
+  Type *CheckType();
 };
 
 class NewExpr : public Expr

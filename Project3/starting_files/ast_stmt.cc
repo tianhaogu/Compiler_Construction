@@ -120,7 +120,8 @@ void ForStmt::Check()
     scope = new Scope();
     init->Check();
     Type *t = test->CheckType();
-    if (!t->IsEquivalentTo(Type::boolType))
+    if (!t->IsEquivalentTo(Type::boolType) &&
+        !t->IsEquivalentTo(Type::errorType))
     {
         ReportError::TestNotBoolean(test);
     }
@@ -132,7 +133,8 @@ void WhileStmt::Check()
 {
     scope = new Scope();
     Type *t = test->CheckType();
-    if (!t->IsEquivalentTo(Type::boolType))
+    if (!t->IsEquivalentTo(Type::boolType) &&
+        !t->IsEquivalentTo(Type::errorType))
     {
         ReportError::TestNotBoolean(test);
     }
@@ -151,7 +153,8 @@ void IfStmt::Check()
 {
     scope = new Scope();
     Type *t = test->CheckType();
-    if (!t->IsEquivalentTo(Type::boolType))
+    if (!t->IsEquivalentTo(Type::boolType) &&
+        !t->IsEquivalentTo(Type::errorType))
     {
         ReportError::TestNotBoolean(test);
     }
