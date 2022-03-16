@@ -196,7 +196,9 @@ void ReturnStmt::Check()
         if (dynamic_cast<FnDecl *>(p))
         {
             Type *returnType = dynamic_cast<FnDecl *>(p)->getReturnType();
-            if (!t->IsEquivalentTo(returnType))
+            if (!t->IsEquivalentTo(returnType) &&
+                !(t->IsEquivalentTo(Type::nullType) && returnType->IsEquivalentTo(Type::voidType)) &&
+                !t->IsEquivalentTo(Type::errorType))
             {
                 ReportError::ReturnMismatch(this, t, returnType);
             }
@@ -215,5 +217,15 @@ PrintStmt::PrintStmt(List<Expr *> *a)
 void PrintStmt::Check()
 {
     scope = new Scope();
-    args->CheckAll();
+    for (int i = 0; i < args->NumElements(); ++i)
+    {
+        Type *t = args->Nth(i)->CheckType();
+        if (!t->IsEquivalentTo(Type::intType) &&
+            !t->IsEquivalentTo(Type::boolType) &&
+            !t->IsEquivalentTo(Type::stringType) &&
+            !t->IsEquivalentTo(Type::errorType))
+        {
+            ReportError::PrintArgMismatch(args->Nth(i), i+1, t);
+        }
+    }
 }

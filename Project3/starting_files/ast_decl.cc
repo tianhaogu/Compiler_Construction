@@ -93,7 +93,6 @@ void ClassDecl::Check()
 
 Scope *ClassDecl::GetScope()
 {
-    scope = NULL;
     if (scope != NULL)
     {
         return scope;

@@ -11,7 +11,7 @@ do
     if [ "$DIFF" != "" ]
     then
         echo $file
-        break
+        # break
     fi
     # break
 done

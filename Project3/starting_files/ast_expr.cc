@@ -166,7 +166,9 @@ Type *EqualityExpr::CheckType()
     if (!r->IsEquivalentTo(l) && 
         !l->IsEquivalentTo(r) && 
         !l->IsEquivalentTo(Type::errorType) && 
-        !r->IsEquivalentTo(Type::errorType))
+        !r->IsEquivalentTo(Type::errorType) &&
+        !(dynamic_cast<NamedType *>(r) && l->IsEquivalentTo(Type::nullType)) &&
+        !(dynamic_cast<NamedType *>(l) && r->IsEquivalentTo(Type::nullType)))
     {
         ReportError::IncompatibleOperands(op, l, r);
     }
@@ -456,6 +458,7 @@ Type *Call::CheckType()
             t = Type::errorType;
             return t;
         }
+        d = d->FindDecl(field);
 
 
 
@@ -520,7 +523,6 @@ Type *Call::CheckType()
         // }
         // else
         // {
-        const char *w = field->GetName();
         d = FindDecl(field);
         if (d == NULL)
         {
