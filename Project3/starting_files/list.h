@@ -92,7 +92,7 @@ public:
             Nth(i)->SetParent(p);
     }
 
-    void DeclareAll(Scope *s, bool flag = false)
+    void DeclareAll(Scope *s, Hashtable<const char *> *flag = NULL)
     {
         for (int i = 0; i < NumElements(); i++)
             s->Declare(Nth(i), flag);

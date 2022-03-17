@@ -380,7 +380,8 @@ ForStmt    :    T_For '(' ExprBlock ';' Expr ';' ExprBlock ')' Stmt    { $$ = ne
 WhileStmt    :    T_While '(' Expr ')' Stmt    { $$ = new WhileStmt($3, $5); }
              ;
 
-ReturnStmt    :    T_Return ExprBlock ';'    { $$ = new ReturnStmt(@2, $2); }
+ReturnStmt    :    T_Return Expr ';'    { $$ = new ReturnStmt(@2, $2); }
+              |    T_Return ';'         { $$ = new ReturnStmt(@1, new EmptyExpr()); }
               ;
 
 ExprBlock    :    Expr    { $$=$1; }
@@ -543,10 +544,10 @@ LogicalExpr    :    Expr T_And Expr    {
                }
                ;
 
-ReadIntegerExpr    :    T_ReadInteger '(' ')'    { $$ = new ReadIntegerExpr(@1); }
+ReadIntegerExpr    :    T_ReadInteger '(' ')'    { $$ = new ReadIntegerExpr(Join(@1, @3)); }
                    ;
 
-ReadLineExpr       :    T_ReadLine '(' ')'    { $$ = new ReadLineExpr(@1); }
+ReadLineExpr       :    T_ReadLine '(' ')'    { $$ = new ReadLineExpr(Join(@1, @3)); }
                    ;
 
 NewExpr    :    T_New '(' T_Identifier ')'    {

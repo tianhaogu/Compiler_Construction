@@ -6,8 +6,6 @@
 
 Decl *Scope::Find(Identifier *id)
 {
-    const char *c = id->GetName();
-
     return t->Lookup(id->GetName());
 }
 
@@ -16,7 +14,7 @@ void Scope::Remove(Decl *d)
     t->Remove(d->GetName(), t->Lookup(d->GetName()));
 }
 
-bool Scope::Declare(Decl *d, bool flag)
+bool Scope::Declare(Decl *d, Hashtable<const char *> *flag)
 {
     Decl *d_old = t->Lookup(d->GetName());
     if (d_old)
@@ -25,7 +23,9 @@ bool Scope::Declare(Decl *d, bool flag)
              dynamic_cast<InterfaceDecl *>(d->GetParent()) != NULL) &&
             (dynamic_cast<ClassDecl *>(d_old->GetParent()) != NULL ||
              dynamic_cast<InterfaceDecl *>(d_old->GetParent()) != NULL) &&
-            (d->GetParent() != d_old->GetParent() || flag))
+            (d->GetParent() != d_old->GetParent() || (flag && flag->Lookup(d->GetName()))) &&
+            dynamic_cast<FnDecl *>(d) &&
+            dynamic_cast<FnDecl *>(d_old))
         {
             FnDecl *fn = dynamic_cast<FnDecl *>(d);
             FnDecl *fn_old = dynamic_cast<FnDecl *>(d_old);
@@ -33,6 +33,7 @@ bool Scope::Declare(Decl *d, bool flag)
             {
                 if (flag)
                 {
+                    flag->Remove(d->GetName(), d->GetName());
                     t->Remove(d->GetName(), t->Lookup(d->GetName()));
                 }
                 t->Enter(d->GetName(), d);

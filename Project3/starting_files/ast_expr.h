@@ -28,8 +28,8 @@ protected:
 public:
   Expr(yyltype loc) : Stmt(loc) { t = NULL; scope = new Scope(); }
   Expr() : Stmt() {}
-  virtual Type *CheckType() { return t; }
-  virtual void Check() { CheckType(); }
+  virtual Type *CheckType(bool c = false) { return t; }
+  virtual void Check() { CheckType(true); }
 };
 
 /* This node type is used for those places where an expression is optional.
@@ -38,7 +38,7 @@ public:
 class EmptyExpr : public Expr
 {
 public:
-  Type *CheckType() { return Type::nullType; }
+  Type *CheckType(bool c = false) { return Type::nullType; }
   void Check() { }
 };
 
@@ -105,7 +105,7 @@ public:
   CompoundExpr(Expr *lhs, Operator *op, Expr *rhs); // for binary
   CompoundExpr(Operator *op, Expr *rhs);            // for unary
   CompoundExpr(Expr *lhs, Operator *op);            // for postfix
-  virtual Type *CheckType() { return Type::nullType; }
+  virtual Type *CheckType(bool c = false) { return Type::nullType; }
 };
 
 class ArithmeticExpr : public CompoundExpr
@@ -113,21 +113,21 @@ class ArithmeticExpr : public CompoundExpr
 public:
   ArithmeticExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs, op, rhs) {}
   ArithmeticExpr(Operator *op, Expr *rhs) : CompoundExpr(op, rhs) {}
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class PostfixExpr : public CompoundExpr
 {
 public:
   PostfixExpr(Expr *lhs, Operator *op) : CompoundExpr(lhs, op) {}
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class RelationalExpr : public CompoundExpr
 {
 public:
   RelationalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs, op, rhs) {}
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class EqualityExpr : public CompoundExpr
@@ -135,7 +135,7 @@ class EqualityExpr : public CompoundExpr
 public:
   EqualityExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs, op, rhs) {}
   const char *GetPrintNameForNode() { return "EqualityExpr"; }
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class LogicalExpr : public CompoundExpr
@@ -144,7 +144,7 @@ public:
   LogicalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs, op, rhs) {}
   LogicalExpr(Operator *op, Expr *rhs) : CompoundExpr(op, rhs) {}
   const char *GetPrintNameForNode() { return "LogicalExpr"; }
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class AssignExpr : public CompoundExpr
@@ -152,7 +152,7 @@ class AssignExpr : public CompoundExpr
 public:
   AssignExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs, op, rhs) {}
   const char *GetPrintNameForNode() { return "AssignExpr"; }
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class LValue : public Expr
@@ -165,7 +165,7 @@ class This : public Expr
 {
 public:
   This(yyltype loc) : Expr(loc) {}
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class ArrayAccess : public LValue
@@ -175,7 +175,7 @@ protected:
 
 public:
   ArrayAccess(yyltype loc, Expr *base, Expr *subscript);
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 /* Note that field access is used both for qualified names
@@ -191,7 +191,7 @@ protected:
 
 public:
   FieldAccess(Expr *base, Identifier *field); //ok to pass NULL base
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 /* Like field access, call is used both for qualified base.field()
@@ -207,7 +207,7 @@ protected:
 
 public:
   Call(yyltype loc, Expr *base, Identifier *field, List<Expr *> *args);
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class NewExpr : public Expr
@@ -217,7 +217,7 @@ protected:
 
 public:
   NewExpr(yyltype loc, NamedType *clsType);
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class NewArrayExpr : public Expr
@@ -228,21 +228,21 @@ protected:
 
 public:
   NewArrayExpr(yyltype loc, Expr *sizeExpr, Type *elemType);
-  Type *CheckType();
+  Type *CheckType(bool c = false);
 };
 
 class ReadIntegerExpr : public Expr
 {
 public:
   ReadIntegerExpr(yyltype loc) : Expr(loc) {}
-  Type *CheckType() { return Type::intType; }
+  Type *CheckType(bool c = false) { return Type::intType; }
 };
 
 class ReadLineExpr : public Expr
 {
 public:
   ReadLineExpr(yyltype loc) : Expr(loc) {}
-  Type *CheckType() { return Type::stringType; }
+  Type *CheckType(bool c = false) { return Type::stringType; }
 };
 
 #endif

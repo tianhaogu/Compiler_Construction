@@ -66,9 +66,9 @@ CompoundExpr::CompoundExpr(Expr *l, Operator *o)
     (left = l)->SetParent(this);
 }
 
-Type *ArithmeticExpr::CheckType()
+Type *ArithmeticExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -91,9 +91,17 @@ Type *ArithmeticExpr::CheckType()
               r->IsEquivalentTo(Type::errorType) ||
               l->IsEquivalentTo(Type::errorType)))
         {
-            ReportError::IncompatibleOperands(op, l, r);
             t = Type::errorType;
-            return Type::errorType;
+            if (c)
+            {
+                ReportError::IncompatibleOperands(op, l, r);
+                if (left)
+                {
+                    left->Check();
+                }
+                right->Check();
+            }
+            return t;
         }
     }
     else if (r)
@@ -102,18 +110,34 @@ Type *ArithmeticExpr::CheckType()
               r->IsEquivalentTo(Type::doubleType) ||
               r->IsEquivalentTo(Type::errorType)))
         {
-            ReportError::IncompatibleOperand(op, r);
             t = Type::errorType;
-            return Type::errorType;
+            if (c)
+            {
+                ReportError::IncompatibleOperand(op, r);
+                if (left)
+                {
+                    left->Check();
+                }
+                right->Check();
+            }
+            return t;
         }
     }
     t = r;
+    if (c)
+    {
+        if (left)
+        {
+            left->Check();
+        }
+        right->Check();
+    }
     return r;
 }
 
-Type *PostfixExpr::CheckType()
+Type *PostfixExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -125,15 +149,25 @@ Type *PostfixExpr::CheckType()
     if (!(l->IsEquivalentTo(Type::intType) ||
           l->IsEquivalentTo(Type::errorType)))
     {
-        ReportError::IncompatibleOperand(op, l);
+        if (c)
+        {
+            ReportError::IncompatibleOperand(op, l);
+        }
     }
     t = Type::intType;
-    return Type::intType;
+    if (c)
+    {
+        if (left)
+        {
+            left->Check();
+        }
+    }
+    return t;
 }
 
-Type *RelationalExpr::CheckType()
+Type *RelationalExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -149,36 +183,52 @@ Type *RelationalExpr::CheckType()
           r->IsEquivalentTo(Type::errorType) ||
           l->IsEquivalentTo(Type::errorType)))
     {
-        ReportError::IncompatibleOperands(op, l, r);
+        if (c)
+        {
+            ReportError::IncompatibleOperands(op, l, r);
+        }
     }
     t = Type::boolType;
-    return Type::boolType;
+    if (c)
+    {
+        left->Check();
+        right->Check();
+    }
+    return t;
 }
 
-Type *EqualityExpr::CheckType()
+Type *EqualityExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
     Type *l = left->CheckType();
     Type *r = right->CheckType();
-    if (!r->IsEquivalentTo(l) && 
-        !l->IsEquivalentTo(r) && 
+    if (!r->isAssignableTo(l) && 
+        !l->isAssignableTo(r) && 
         !l->IsEquivalentTo(Type::errorType) && 
         !r->IsEquivalentTo(Type::errorType) &&
         !(dynamic_cast<NamedType *>(r) && l->IsEquivalentTo(Type::nullType)) &&
         !(dynamic_cast<NamedType *>(l) && r->IsEquivalentTo(Type::nullType)))
     {
-        ReportError::IncompatibleOperands(op, l, r);
+        if (c)
+        {
+            ReportError::IncompatibleOperands(op, l, r);
+        }
     }
     t = Type::boolType;
-    return Type::boolType;
+    if (c)
+    {
+        left->Check();
+        right->Check();
+    }
+    return t;
 }
 
-Type *LogicalExpr::CheckType()
+Type *LogicalExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -196,7 +246,10 @@ Type *LogicalExpr::CheckType()
             !(l->IsEquivalentTo(Type::boolType) ||
               l->IsEquivalentTo(Type::errorType)))
         {
-            ReportError::IncompatibleOperands(op, l, r);
+            if (c)
+            {
+                ReportError::IncompatibleOperands(op, l, r);
+            }
         }
     }
     else if (r)
@@ -204,41 +257,65 @@ Type *LogicalExpr::CheckType()
         if (!(r->IsEquivalentTo(Type::boolType) ||
               r->IsEquivalentTo(Type::errorType)))
         {
-            ReportError::IncompatibleOperand(op, r);
+            if (c)
+            {
+                ReportError::IncompatibleOperand(op, r);
+            }
         }
     }
     t = Type::boolType;
-    return Type::boolType;
+    if (c)
+    {
+        if (left)
+        {
+            left->Check();
+        }
+        right->Check();
+    }
+    return t;
 }
 
-Type *AssignExpr::CheckType()
+Type *AssignExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
     Type *l = left->CheckType();
     Type *r = right->CheckType();
-    if (!(r->IsEquivalentTo(l) ||
-          r->IsEquivalentTo(Type::errorType) ||
-          l->IsEquivalentTo(Type::errorType)))
+    if (!r->isAssignableTo(l) &&
+        !(r->IsEquivalentTo(Type::nullType) && dynamic_cast<NamedType *>(l)) &&
+        !r->IsEquivalentTo(Type::errorType) &&
+        !l->IsEquivalentTo(Type::errorType))
     {
-        ReportError::IncompatibleOperands(op, l, r);
         t = Type::errorType;
-        return Type::errorType;
+        if (c)
+        {
+            ReportError::IncompatibleOperands(op, l, r);
+            left->Check();
+            right->Check();
+        }
+        return t;
     }
     if (l->IsEquivalentTo(Type::errorType))
     {
         t = r;
-        return r;
     }
-    t = l;
+    else
+    {
+        t = l;
+    }
+    if (c)
+    {
+        left->Check();
+        right->Check();
+    }
     return t;
 }
 
-Type *This::CheckType()
+Type *This::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -252,9 +329,12 @@ Type *This::CheckType()
         }
         p = p->GetParent();
     }
-    ReportError::ThisOutsideClassScope(this);
+    if (c)
+    {
+        ReportError::ThisOutsideClassScope(this);
+    }
     t = Type::errorType;
-    return Type::errorType;
+    return t;
 }
 
 ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc)
@@ -263,32 +343,45 @@ ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc)
     (subscript = s)->SetParent(this);
 }
 
-Type *ArrayAccess::CheckType()
+Type *ArrayAccess::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
     Type *tempType;
     tempType = base->CheckType();
-    if (dynamic_cast<ArrayType *>(tempType) == NULL)
+    if (dynamic_cast<ArrayType *>(tempType) == NULL &&
+        !tempType->IsEquivalentTo(Type::errorType))
     {
-        ReportError::BracketsOnNonArray(base);
+        if (c)
+        {
+            ReportError::BracketsOnNonArray(base);
+        }
     }
     tempType = subscript->CheckType();
     if (!tempType->IsEquivalentTo(Type::intType) &&
         !tempType->IsEquivalentTo(Type::errorType))
     {
-        ReportError::SubscriptNotInteger(subscript);
+        if (c)
+        {
+            ReportError::SubscriptNotInteger(subscript);
+        }
     }
     tempType = base->CheckType();
-    if (dynamic_cast<ArrayType *>(tempType) == NULL)
+    if (dynamic_cast<ArrayType *>(tempType) == NULL || 
+        tempType->IsEquivalentTo(Type::errorType))
     {
         t = Type::errorType;
     }
     else
     {
         t = dynamic_cast<ArrayType *>(tempType)->getElementType();
+    }
+    if (c)
+    {
+        base->Check();
+        subscript->Check();
     }
     return t;
 }
@@ -303,9 +396,9 @@ FieldAccess::FieldAccess(Expr *b, Identifier *f)
     (field = f)->SetParent(this);
 }
 
-Type *FieldAccess::CheckType()
+Type *FieldAccess::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -317,6 +410,10 @@ Type *FieldAccess::CheckType()
         if (cType->IsEquivalentTo(Type::errorType))
         {
             t = Type::errorType;
+            if (c)
+            {
+                base->Check();
+            }
             return t;
         }
         NamedType *nType = dynamic_cast<NamedType *>(cType);
@@ -326,14 +423,22 @@ Type *FieldAccess::CheckType()
         }
         if (nType != NULL && d == NULL)
         {
-            ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
             t = Type::errorType;
+            if (c)
+            {
+                ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
+                base->Check();
+            }
             return t;
         }
         if (d == NULL || d->FindDecl(field) == NULL)
         {
-            ReportError::FieldNotFoundInBase(field, cType);
             t = Type::errorType;
+            if (c)
+            {
+                ReportError::FieldNotFoundInBase(field, cType);
+                base->Check();
+            }
             return t;
         }
         bool inClass = false;
@@ -349,8 +454,23 @@ Type *FieldAccess::CheckType()
         }
         if (!inClass)
         {
-            ReportError::InaccessibleField(field, cType);
             t = Type::errorType;
+            if (c)
+            {
+                ReportError::InaccessibleField(field, cType);
+                base->Check();
+            }
+            return t;
+        }
+        d = d->FindDecl(field, true);
+        if (d == NULL || dynamic_cast<VarDecl *>(d) == NULL)
+        {
+            t = Type::errorType;
+            if (c)
+            {
+                ReportError::FieldNotFoundInBase(field, cType);
+                base->Check();
+            }
             return t;
         }
     }
@@ -373,8 +493,11 @@ Type *FieldAccess::CheckType()
             d = FindDecl(field);
             if (d == NULL)
             {
-                ReportError::FieldNotFoundInBase(field, cType);
                 t = Type::errorType;
+                if (c)
+                {
+                    ReportError::FieldNotFoundInBase(field, cType);
+                }
                 return t;
             }
         }
@@ -384,21 +507,32 @@ Type *FieldAccess::CheckType()
             d = FindDecl(field);
             if (d == NULL)
             {
-                ReportError::IdentifierNotDeclared(field, LookingForVariable);
                 t = Type::errorType;
+                if (c)
+                {
+                    ReportError::IdentifierNotDeclared(field, LookingForVariable);
+                }
                 return t;
             }
         }
+        if (dynamic_cast<VarDecl *>(d) == NULL)
+        {
+            t = Type::errorType;
+            if (c)
+            {
+                ReportError::IdentifierNotDeclared(field, LookingForVariable);
+            }
+            return t;
+        }
     }
-
-    if (dynamic_cast<VarDecl *>(d) == NULL)
+    t = dynamic_cast<VarDecl *>(d)->GetType();
+    if (c)
     {
-        ReportError::IdentifierNotDeclared(field, LookingForVariable);
-        t = Type::errorType;
-    }
-    else
-    {
-        t = dynamic_cast<VarDecl *>(d)->GetType();
+        if (base)
+        {
+            base->Check();
+        }
+        dynamic_cast<VarDecl *>(d)->Check();
     }
     return t;
 }
@@ -413,9 +547,9 @@ Call::Call(yyltype loc, Expr *b, Identifier *f, List<Expr *> *a) : Expr(loc)
     (actuals = a)->SetParentAll(this);
 }
 
-Type *Call::CheckType()
+Type *Call::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
@@ -426,11 +560,37 @@ Type *Call::CheckType()
         cType = base->CheckType();
         if (cType->IsEquivalentTo(Type::errorType))
         {
-            for (int i = 0; i < actuals->NumElements(); ++i)
+            if (c)
             {
-                actuals->Nth(i)->Check();
+                base->Check();
+                for (int i = 0; i < actuals->NumElements(); ++i)
+                {
+                    actuals->Nth(i)->Check();
+                }
             }
             t = Type::errorType;
+            return t;
+        }
+        if (dynamic_cast<ArrayType *>(cType) && strcmp(field->GetName(), "length") == 0)
+        {
+            t = Type::intType;
+
+            int num_actual = actuals->NumElements();
+            if (num_actual != 0)
+            {
+                if (c)
+                {
+                    ReportError::NumArgsMismatch(field, 0, num_actual);
+                }
+            }
+            if (c)
+            {
+                base->Check();
+                for (int i = 0; i < num_actual; ++i)
+                {
+                    actuals->Nth(i)->Check();
+                }
+            }
             return t;
         }
         NamedType *nType = dynamic_cast<NamedType *>(cType);
@@ -440,132 +600,107 @@ Type *Call::CheckType()
         }
         if (nType != NULL && d == NULL)
         {
-            ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
-            for (int i = 0; i < actuals->NumElements(); ++i)
+            if (c)
             {
-                actuals->Nth(i)->Check();
+                ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
+                base->Check();
+                for (int i = 0; i < actuals->NumElements(); ++i)
+                {
+                    actuals->Nth(i)->Check();
+                }
             }
             t = Type::errorType;
             return t;
         }
         if (d == NULL || d->FindDecl(field) == NULL)
         {
-            ReportError::FieldNotFoundInBase(field, cType);
-            for (int i = 0; i < actuals->NumElements(); ++i)
+            if (c)
             {
-                actuals->Nth(i)->Check();
+                ReportError::FieldNotFoundInBase(field, cType);
+                base->Check();
+                for (int i = 0; i < actuals->NumElements(); ++i)
+                {
+                    actuals->Nth(i)->Check();
+                }
             }
             t = Type::errorType;
             return t;
         }
-        d = d->FindDecl(field);
 
-
-
-
-
-        // cType = base->CheckType();
-        // if (cType->IsEquivalentTo(Type::errorType))
-        // {
-        //     for (int i = 0; i < actuals->NumElements(); ++i)
-        //     {
-        //         actuals->Nth(i)->Check();
-        //     }
-        //     t = Type::errorType;
-        //     return t;
-        // }
-        // NamedType *nType = dynamic_cast<NamedType *>(cType);
-        // if (nType != NULL)
-        // {
-        //     d = FindDecl(nType->getID());
-        // }
-        // if (d == NULL)
-        // {
-        //     ReportError::IdentifierNotDeclared(nType->getID(), LookingForClass);
-        //     for (int i = 0; i < actuals->NumElements(); ++i)
-        //     {
-        //         actuals->Nth(i)->Check();
-        //     }
-        //     t = Type::errorType;
-        //     return t;
-        // }
-        // d = d->FindDecl(field);
-        // if (d == NULL)
-        // {
-        //     ReportError::FieldNotFoundInBase(field, cType);
-        //     t = Type::errorType;
-        //     return t;
-        // }
-    }
-    else
-    {
-        // bool inClass = false;
-        // Node *p = parent;
-        // while (p)
-        // {
-        //     if (dynamic_cast<ClassDecl *>(p))
-        //     {
-        //         // inClass = true;
-        //         break;
-        //     }
-        //     p = p->GetParent();
-        // }
-        // if (inClass)
-        // {
-        //     cType = dynamic_cast<ClassDecl *>(p)->GetType();
-        //     d = FindDecl(field);
-        //     if (d == NULL)
-        //     {
-        //         ReportError::FieldNotFoundInBase(field, cType);
-        //         t = Type::errorType;
-        //         return t;
-        //     }
-        // }
-        // else
-        // {
-        d = FindDecl(field);
-        if (d == NULL)
+        d = d->FindDecl(field, true);
+        if (d == NULL || dynamic_cast<FnDecl *>(d) == NULL)
         {
-            ReportError::IdentifierNotDeclared(field, LookingForFunction);
+            if (c)
+            {
+                ReportError::FieldNotFoundInBase(field, cType);
+                base->Check();
+                for (int i = 0; i < actuals->NumElements(); ++i)
+                {
+                    actuals->Nth(i)->Check();
+                }
+            }
             t = Type::errorType;
             return t;
         }
-        // }
-    }
-
-    if (dynamic_cast<FnDecl *>(d) == NULL)
-    {
-        ReportError::IdentifierNotDeclared(field, LookingForFunction);
-        t = Type::errorType;
     }
     else
     {
-        FnDecl *f = dynamic_cast<FnDecl *>(d);
-        t = f->getReturnType();
-        List<VarDecl *> *f_formals = f->getFormals();
-        int num_actual = actuals->NumElements();
-        int num_expect = f_formals->NumElements();
-        if (num_actual != num_expect)
+        d = FindDecl(field);
+        if (d == NULL || dynamic_cast<FnDecl *>(d) == NULL)
+        {
+            if (c)
+            {
+                ReportError::IdentifierNotDeclared(field, LookingForFunction);
+                for (int i = 0; i < actuals->NumElements(); ++i)
+                {
+                    actuals->Nth(i)->Check();
+                }
+            }
+            t = Type::errorType;
+            return t;
+        }
+    }
+
+    FnDecl *f = dynamic_cast<FnDecl *>(d);
+    t = f->getReturnType();
+    List<VarDecl *> *f_formals = f->getFormals();
+    int num_actual = actuals->NumElements();
+    int num_expect = f_formals->NumElements();
+    if (num_actual != num_expect)
+    {
+        if (c)
         {
             ReportError::NumArgsMismatch(field, num_expect, num_actual);
         }
-        int num_comp = num_actual > num_expect ? num_expect : num_actual;
-        for (int i = 0; i < num_comp; ++i)
+    }
+    int num_comp = num_actual > num_expect ? num_expect : num_actual;
+    for (int i = 0; i < num_comp; ++i)
+    {
+        Type *t_actual = actuals->Nth(i)->CheckType();
+        Type *t_expect = f_formals->Nth(i)->GetType();
+        if (!t_actual->IsEquivalentTo(Type::errorType) &&
+            !t_expect->IsEquivalentTo(Type::errorType) &&
+            !(t_actual->IsEquivalentTo(Type::nullType) && dynamic_cast<NamedType *>(t_expect)) &&
+            !t_actual->isAssignableTo(t_expect))
         {
-            Type *t_actual = actuals->Nth(i)->CheckType();
-            Type *t_expect = f_formals->Nth(i)->GetType();
-            if (!t_actual->IsEquivalentTo(Type::errorType) &&
-                !t_expect->IsEquivalentTo(Type::errorType) &&
-                !t_expect->IsEquivalentTo(t_actual))
+            if (c)
             {
                 ReportError::ArgMismatch(actuals->Nth(i), i+1, t_actual, t_expect);
             }
         }
-        for (int i = num_comp; i < num_actual; ++i)
+    }
+    if (c)
+    {
+        if (base)
+        {
+            base->Check();
+        }
+        for (int i = 0; i < num_actual; ++i)
         {
             actuals->Nth(i)->Check();
         }
     }
+
     return t;
 }
 
@@ -575,16 +710,19 @@ NewExpr::NewExpr(yyltype loc, NamedType *c) : Expr(loc)
     (cType = c)->SetParent(this);
 }
 
-Type *NewExpr::CheckType()
+Type *NewExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
     Decl *d = FindDecl(cType->getID());
     if (d == NULL || !d->isClass())
     {
-        ReportError::IdentifierNotDeclared(cType->getID(), LookingForClass);
+        if (c)
+        {
+            ReportError::IdentifierNotDeclared(cType->getID(), LookingForClass);
+        }
         t = Type::errorType;
     }
     else
@@ -601,18 +739,24 @@ NewArrayExpr::NewArrayExpr(yyltype loc, Expr *sz, Type *et) : Expr(loc)
     (elemType = et)->SetParent(this);
 }
 
-Type *NewArrayExpr::CheckType()
+Type *NewArrayExpr::CheckType(bool c)
 {
-    if (t)
+    if (t && !c)
     {
         return t;
     }
     Type *st = size->CheckType();
-    if (st && !st->IsEquivalentTo(Type::intType) && !st->IsEquivalentTo(Type::errorType))
+    if (st && 
+        !st->IsEquivalentTo(Type::intType) && 
+        !st->IsEquivalentTo(Type::errorType))
     {
-        ReportError::NewArraySizeNotInteger(size);
+        if (c)
+        {
+            ReportError::NewArraySizeNotInteger(size);
+        }
     }
-    elemType->Check();
+    
+    elemType->Check(false);
     if (elemType->isError())
     {
         t = Type::errorType;
@@ -620,6 +764,11 @@ Type *NewArrayExpr::CheckType()
     else
     {
         t = new ArrayType(*GetLocation(), elemType);
+    }
+    if (c)
+    {
+        size->Check();
+        elemType->Check();
     }
     return t;
 }

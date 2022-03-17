@@ -48,8 +48,8 @@ public:
   yyltype *GetLocation() { return location; }
   void SetParent(Node *p) { parent = p; }
   Node *GetParent() { return parent; }
-  Decl *FindDecl(Identifier *id);
-  virtual Scope *GetScope() { return scope; }
+  Decl *FindDecl(Identifier *id, bool stop = false);
+  virtual Scope *GetScope() { if (scope == NULL) scope = new Scope(); return scope;}
   virtual void Check() {}
 };
 

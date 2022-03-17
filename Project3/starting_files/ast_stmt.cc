@@ -97,6 +97,7 @@ void SwitchStmt::Check()
     {
         ReportError::TestNotBoolean(test);
     }
+    test->Check();
     stmts->CheckAll();
     defaultBody->Check();
 }
@@ -125,6 +126,7 @@ void ForStmt::Check()
     {
         ReportError::TestNotBoolean(test);
     }
+    test->Check();
     step->Check();
     body->Check();
 }
@@ -138,6 +140,7 @@ void WhileStmt::Check()
     {
         ReportError::TestNotBoolean(test);
     }
+    test->Check();
     body->Check();
 }
 
@@ -158,6 +161,7 @@ void IfStmt::Check()
     {
         ReportError::TestNotBoolean(test);
     }
+    test->Check();
     body->Check();
     if (elseBody)
     {
@@ -190,15 +194,21 @@ void ReturnStmt::Check()
 {
     scope = new Scope();
     Type *t = expr->CheckType();
+    if (t->IsEquivalentTo(Type::nullType))
+    {
+        t = Type::voidType;
+    }
     Node *p = parent;
     while (p)
     {
         if (dynamic_cast<FnDecl *>(p))
         {
             Type *returnType = dynamic_cast<FnDecl *>(p)->getReturnType();
-            if (!t->IsEquivalentTo(returnType) &&
-                !(t->IsEquivalentTo(Type::nullType) && returnType->IsEquivalentTo(Type::voidType)) &&
-                !t->IsEquivalentTo(Type::errorType))
+            if (
+                !t->isAssignableTo(returnType) &&
+                !(t->IsEquivalentTo(Type::voidType) && dynamic_cast<NamedType *>(returnType)) &&
+                !t->IsEquivalentTo(Type::errorType) &&
+                !returnType->IsEquivalentTo(Type::errorType))
             {
                 ReportError::ReturnMismatch(this, t, returnType);
             }
@@ -206,6 +216,7 @@ void ReturnStmt::Check()
         }
         p = p->GetParent();
     }
+    expr->Check();
 }
 
 PrintStmt::PrintStmt(List<Expr *> *a)
@@ -227,5 +238,6 @@ void PrintStmt::Check()
         {
             ReportError::PrintArgMismatch(args->Nth(i), i+1, t);
         }
+        args->Nth(i)->Check();
     }
 }

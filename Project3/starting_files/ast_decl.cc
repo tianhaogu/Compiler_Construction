@@ -40,6 +40,7 @@ ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType *> *imp, List<
     t->SetParent(this);
     inters = NULL;
     scope = NULL;
+    parents = new Hashtable<const char *>;
 }
 
 void ClassDecl::Check()
@@ -52,6 +53,18 @@ void ClassDecl::Check()
             ReportError::IdentifierNotDeclared(extends->getID(), LookingForClass);
             extends = NULL;
         }
+        if (extends)
+        {
+            ClassDecl *cd = dynamic_cast<ClassDecl *>(d);
+            Iterator<const char *> i = cd->parents->GetIterator();
+            const char *tempC = i.GetNextValue();
+            while (tempC)
+            {
+                parents->Enter(tempC, tempC);
+                tempC = i.GetNextValue();
+            }
+            parents->Enter(extends->GetTypeName(), extends->GetTypeName());
+        }
     }
     for (int i = 0; i < implements->NumElements(); ++i)
     {
@@ -62,6 +75,10 @@ void ClassDecl::Check()
             ReportError::IdentifierNotDeclared(n->getID(), LookingForInterface);
             implements->RemoveAt(i);
             --i;
+        }
+        else
+        {
+            parents->Enter(d->GetName(), d->GetName());
         }
     }
     GetScope();
@@ -87,7 +104,17 @@ void ClassDecl::Check()
             ReportError::InterfaceNotImplemented(this, implements->Nth(i));
         }
     }
-    members->DeclareAll(scope, true);
+    Hashtable<const char *> *flag = new Hashtable<const char *>;
+    Iterator<Decl *> i = scope->GetIter();
+    Decl *tempDecl = i.GetNextValue();
+    const char *tempC = tempDecl ? tempDecl->GetName() : NULL;
+    while (tempC)
+    {
+        flag->Enter(tempC, tempC);
+        tempDecl = i.GetNextValue();
+        tempC = tempDecl ? tempDecl->GetName() : NULL;
+    }
+    members->DeclareAll(scope, flag);
     members->CheckAll();
 }
 
@@ -162,8 +189,12 @@ bool FnDecl::IsEquivalentTo(FnDecl *fn)
         return false;
     }
     for (int i = 0; i < formals->NumElements(); ++i)
-    {
-        if (!formals->Nth(i)->GetType()->IsEquivalentTo(fn->formals->Nth(i)->GetType()))
+    {   
+        VarDecl *formal = formals->Nth(i);
+        VarDecl *fn_formal = fn->formals->Nth(i);
+        if (!formal->GetType()->IsEquivalentTo(fn_formal->GetType())
+            // || !(strcmp(formal->GetName(), fn_formal->GetName()) == 0)
+            )
         {
             return false;
         }
@@ -173,8 +204,8 @@ bool FnDecl::IsEquivalentTo(FnDecl *fn)
 
 void FnDecl::Check()
 {
-    returnType->Check();
     scope = new Scope();
+    returnType->Check();
     formals->DeclareAll(scope);
     formals->CheckAll();
     if (body != NULL)

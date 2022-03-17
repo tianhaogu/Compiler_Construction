@@ -37,9 +37,44 @@ NamedType::NamedType(Identifier *i) : Type(*i->GetLocation())
     error = false;
 }
 
-void NamedType::Check()
+bool NamedType::isAssignableTo(Type *other)
 {
-    if (!d && !error)
+    if (!error)
+    {
+        if (!d)
+        {
+            Decl *tempD = FindDecl(id);
+            if (tempD && (tempD->isClass() || tempD->isInter()))
+            {
+                d = tempD;
+            }
+            ClassDecl *cDecl = dynamic_cast<ClassDecl *>(d);
+            if (d && d->isClass() && cDecl)
+            {
+                if (cDecl->isParent(other->GetTypeName()))
+                {
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            ClassDecl *cDecl = dynamic_cast<ClassDecl *>(d);
+            if (d && d->isClass() && cDecl)
+            {
+                if (cDecl->isParent(other->GetTypeName()))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return IsEquivalentTo(other);
+}
+
+void NamedType::Check(bool c)
+{
+    if (!d && ((error < 1) || (c && (error < 2))))
     {
         Decl *tempD = FindDecl(id);
         if (tempD && (tempD->isClass() || tempD->isInter()))
@@ -48,8 +83,15 @@ void NamedType::Check()
         }
         else
         {
-            ReportError::IdentifierNotDeclared(id, LookingForType);
-            error = true;
+            if (c)
+            {
+                ReportError::IdentifierNotDeclared(id, LookingForType);
+                error = 2;
+            }
+            else
+            {
+                error = 1;
+            }
         }
     }
 }
@@ -73,7 +115,7 @@ bool ArrayType::IsEquivalentTo(Type *t)
     }
 }
 
-void ArrayType::Check()
+void ArrayType::Check(bool c)
 {
-    elemType->Check();
+    elemType->Check(c);
 }

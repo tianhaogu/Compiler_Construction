@@ -64,6 +64,7 @@ protected:
   List<NamedType *> *implements;
   Type *t;
 
+  Hashtable<const char *> *parents;
   List<Scope *> *inters;
 
 public:
@@ -73,6 +74,7 @@ public:
   void Check();
   Scope *GetScope();
   Type *GetType() { return t; }
+  bool isParent(const char *c) { return parents->Lookup(c) != NULL; }
 };
 
 class InterfaceDecl : public Decl

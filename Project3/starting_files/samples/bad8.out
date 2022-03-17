@@ -19,12 +19,12 @@
 
 *** Error line 22.
   red = (blue < red && blue == null);
-              ^
-*** Incompatible operands: Boat < Honda
+      ^
+*** Incompatible operands: Honda = bool
 
 
 *** Error line 22.
   red = (blue < red && blue == null);
-      ^
-*** Incompatible operands: Honda = bool
+              ^
+*** Incompatible operands: Boat < Honda
 

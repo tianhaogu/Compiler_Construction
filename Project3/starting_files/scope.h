@@ -16,9 +16,10 @@ public:
   Scope() { t = new Hashtable<Decl *>; }
   Decl *Find(Identifier *id);
   void Remove(Decl *d);
-  bool Declare(Decl *d, bool flag = false);
+  bool Declare(Decl *d, Hashtable<const char *> *flag = NULL);
   void Copy(Scope *s);
   int NumEntries();
+  Iterator<Decl *> GetIter() { return t->GetIterator(); }
 };
 
 #endif

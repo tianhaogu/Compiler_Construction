@@ -34,8 +34,9 @@ public:
     t->PrintToStream(out);
     return out;
   }
+  virtual bool isAssignableTo(Type *other) { return IsEquivalentTo(other); }
   virtual bool IsEquivalentTo(Type *other) { return this == other; }
-  virtual void Check() {}
+  virtual void Check(bool c = true) {}
   virtual const char *GetTypeName() { return typeName; }
   virtual bool isError() { return false; }
 };
@@ -45,18 +46,19 @@ class NamedType : public Type
 protected:
   Identifier *id;
   Decl *d;
-  bool error;
+  int error;
 
 public:
   NamedType(Identifier *i);
 
+  bool isAssignableTo(Type *other);
   bool IsEquivalentTo(Type *other) { return strcmp(this->GetTypeName(), other->GetTypeName()) == 0; }
   void PrintToStream(std::ostream &out) { out << id; }
-  void Check();
+  void Check(bool c = true);
   Decl *getDecl() { return d; }
   Identifier *getID() { return id; }
   const char *GetTypeName() { return id->GetName(); }
-  bool isError() { return error; }
+  bool isError() { return error > 0; }
 };
 
 class ArrayType : public Type
@@ -73,7 +75,7 @@ public:
   const char *GetTypeName() { return "[]"; }
   Type *getElementType() { return elemType; }
   bool isError() { return error; }
-  void Check();
+  void Check(bool c = true);
 };
 
 #endif

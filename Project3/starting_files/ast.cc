@@ -22,7 +22,7 @@ Node::Node()
     scope = NULL;
 }
 
-Decl *Node::FindDecl(Identifier *id)
+Decl *Node::FindDecl(Identifier *id, bool stop)
 {
     scope = (scope == NULL) ? GetScope() : scope;
     Decl *d = scope->Find(id);
@@ -30,7 +30,7 @@ Decl *Node::FindDecl(Identifier *id)
     {
         return d;
     }
-    else if (parent)
+    else if (parent && !stop)
     {
         return parent->FindDecl(id);
     }
