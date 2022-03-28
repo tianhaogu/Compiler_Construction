@@ -1,0 +1,6 @@
+
+*** Error line 43.
+   veggies[0] = New(Squash);
+              ^
+*** Incompatible operands: Vegetable = Squash
+

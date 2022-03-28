@@ -1,0 +1,6 @@
+
+*** Error line 9.
+    this.height = h;
+         ^^^^^^
+*** No declaration found for variable 'height'
+

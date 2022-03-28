@@ -1,0 +1,36 @@
+
+*** Error line 9.
+    this.data = data;
+         ^^^^
+*** No declaration found for variable 'data'
+
+
+*** Error line 10.
+    this.next = next;
+         ^^^^
+*** No declaration found for variable 'next'
+
+
+*** Error line 11.
+    next.prev = this;
+         ^^^^
+*** No declaration found for variable 'prev'
+
+
+*** Error line 12.
+    this.prev = prev;
+         ^^^^
+*** No declaration found for variable 'prev'
+
+
+*** Error line 13.
+    prev.next = this;
+         ^^^^
+*** No declaration found for variable 'next'
+
+
+*** Error line 16.
+    return this.data;
+                ^^^^
+*** No declaration found for variable 'data'
+

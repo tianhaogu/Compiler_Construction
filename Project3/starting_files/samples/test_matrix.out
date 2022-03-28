@@ -1,0 +1,18 @@
+
+*** Error line 67.
+    this.data = d;
+         ^^^^
+*** No declaration found for variable 'data'
+
+
+*** Error line 68.
+    this.y = y;
+         ^
+*** No declaration found for variable 'y'
+
+
+*** Error line 69.
+    this.next = next;
+         ^^^^
+*** No declaration found for variable 'next'
+
