@@ -49,7 +49,7 @@ class Mips {
     static const char *mipsName[BinaryOp::NumOps];
     static const char *NameForTac(BinaryOp::OpCode code);
 
- public:
+  public:
     
     Mips();
 

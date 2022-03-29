@@ -19,18 +19,22 @@
 class Identifier;
 class Stmt;
 
-class Decl : public Node 
-{
+class Decl : public Node {
   protected:
     Identifier *id;
   
   public:
     Decl(Identifier *name);
     friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
+    const char *GetName() { return id-> GetName(); }
+    Identifier *getID() { return id; }
+
+    virtual bool isClass() { return false; }
+    virtual bool isInter() { return false; }
+    virtual bool isFunct() { return false; }
 };
 
-class VarDecl : public Decl 
-{
+class VarDecl : public Decl {
   protected:
     Type *type;
     
@@ -38,8 +42,7 @@ class VarDecl : public Decl
     VarDecl(Identifier *name, Type *type);
 };
 
-class ClassDecl : public Decl 
-{
+class ClassDecl : public Decl {
   protected:
     List<Decl*> *members;
     NamedType *extends;
@@ -48,19 +51,19 @@ class ClassDecl : public Decl
   public:
     ClassDecl(Identifier *name, NamedType *extends, 
               List<NamedType*> *implements, List<Decl*> *members);
+    bool isClass() { return true; }
 };
 
-class InterfaceDecl : public Decl 
-{
+class InterfaceDecl : public Decl {
   protected:
     List<Decl*> *members;
     
   public:
     InterfaceDecl(Identifier *name, List<Decl*> *members);
+    bool isInter() { return true; }
 };
 
-class FnDecl : public Decl 
-{
+class FnDecl : public Decl {
   protected:
     List<VarDecl*> *formals;
     Type *returnType;
@@ -69,6 +72,7 @@ class FnDecl : public Decl
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
     void SetFunctionBody(Stmt *b);
+    bool isFunct() { return true; }
 };
 
 #endif

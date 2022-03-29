@@ -17,8 +17,7 @@
 #include <iostream>
 
 
-class Type : public Node 
-{
+class Type : public Node {
   protected:
     char *typeName;
 
@@ -34,8 +33,7 @@ class Type : public Node
     virtual bool IsEquivalentTo(Type *other) { return this == other; }
 };
 
-class NamedType : public Type 
-{
+class NamedType : public Type {
   protected:
     Identifier *id;
     
@@ -45,8 +43,7 @@ class NamedType : public Type
     void PrintToStream(std::ostream& out) { out << id; }
 };
 
-class ArrayType : public Type 
-{
+class ArrayType : public Type {
   protected:
     Type *elemType;
 

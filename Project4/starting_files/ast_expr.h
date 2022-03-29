@@ -21,8 +21,7 @@ class NamedType; // for new
 class Type; // for NewArray
 
 
-class Expr : public Stmt 
-{
+class Expr : public Stmt {
   public:
     Expr(yyltype loc) : Stmt(loc) {}
     Expr() : Stmt() {}
@@ -31,13 +30,11 @@ class Expr : public Stmt
 /* This node type is used for those places where an expression is optional.
  * We could use a NULL pointer, but then it adds a lot of checking for
  * NULL. By using a valid, but no-op, node, we save that trouble */
-class EmptyExpr : public Expr
-{
+class EmptyExpr : public Expr {
   public:
 };
 
-class IntConstant : public Expr 
-{
+class IntConstant : public Expr {
   protected:
     int value;
   
@@ -45,8 +42,7 @@ class IntConstant : public Expr
     IntConstant(yyltype loc, int val);
 };
 
-class DoubleConstant : public Expr 
-{
+class DoubleConstant : public Expr {
   protected:
     double value;
     
@@ -54,8 +50,7 @@ class DoubleConstant : public Expr
     DoubleConstant(yyltype loc, double val);
 };
 
-class BoolConstant : public Expr 
-{
+class BoolConstant : public Expr {
   protected:
     bool value;
     
@@ -63,8 +58,7 @@ class BoolConstant : public Expr
     BoolConstant(yyltype loc, bool val);
 };
 
-class StringConstant : public Expr 
-{ 
+class StringConstant : public Expr { 
   protected:
     char *value;
     
@@ -72,14 +66,12 @@ class StringConstant : public Expr
     StringConstant(yyltype loc, const char *val);
 };
 
-class NullConstant: public Expr 
-{
+class NullConstant: public Expr {
   public: 
     NullConstant(yyltype loc) : Expr(loc) {}
 };
 
-class Operator : public Node 
-{
+class Operator : public Node {
   protected:
     char tokenString[4];
     
@@ -88,8 +80,7 @@ class Operator : public Node
     friend std::ostream& operator<<(std::ostream& out, Operator *o) { return out << o->tokenString; }
  };
  
-class CompoundExpr : public Expr
-{
+class CompoundExpr : public Expr {
   protected:
     Operator *op;
     Expr *left, *right; // left will be NULL if unary
@@ -99,55 +90,47 @@ class CompoundExpr : public Expr
     CompoundExpr(Operator *op, Expr *rhs);             // for unary
 };
 
-class ArithmeticExpr : public CompoundExpr 
-{
+class ArithmeticExpr : public CompoundExpr {
   public:
     ArithmeticExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     ArithmeticExpr(Operator *op, Expr *rhs) : CompoundExpr(op,rhs) {}
 };
 
-class RelationalExpr : public CompoundExpr 
-{
+class RelationalExpr : public CompoundExpr {
   public:
     RelationalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
 };
 
-class EqualityExpr : public CompoundExpr 
-{
+class EqualityExpr : public CompoundExpr {
   public:
     EqualityExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     const char *GetPrintNameForNode() { return "EqualityExpr"; }
 };
 
-class LogicalExpr : public CompoundExpr 
-{
+class LogicalExpr : public CompoundExpr {
   public:
     LogicalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     LogicalExpr(Operator *op, Expr *rhs) : CompoundExpr(op,rhs) {}
     const char *GetPrintNameForNode() { return "LogicalExpr"; }
 };
 
-class AssignExpr : public CompoundExpr 
-{
+class AssignExpr : public CompoundExpr {
   public:
     AssignExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     const char *GetPrintNameForNode() { return "AssignExpr"; }
 };
 
-class LValue : public Expr 
-{
+class LValue : public Expr {
   public:
     LValue(yyltype loc) : Expr(loc) {}
 };
 
-class This : public Expr 
-{
+class This : public Expr {
   public:
     This(yyltype loc) : Expr(loc) {}
 };
 
-class ArrayAccess : public LValue 
-{
+class ArrayAccess : public LValue {
   protected:
     Expr *base, *subscript;
     
@@ -160,8 +143,7 @@ class ArrayAccess : public LValue
  * know for sure whether there is an implicit "this." in
  * front until later on, so we use one node type for either
  * and sort it out later. */
-class FieldAccess : public LValue 
-{
+class FieldAccess : public LValue {
   protected:
     Expr *base;	// will be NULL if no explicit base
     Identifier *field;
@@ -174,8 +156,7 @@ class FieldAccess : public LValue
  * and unqualified field().  We won't figure out until later
  * whether we need implicit "this." so we use one node type for either
  * and sort it out later. */
-class Call : public Expr 
-{
+class Call : public Expr {
   protected:
     Expr *base;	// will be NULL if no explicit base
     Identifier *field;
@@ -185,8 +166,7 @@ class Call : public Expr
     Call(yyltype loc, Expr *base, Identifier *field, List<Expr*> *args);
 };
 
-class NewExpr : public Expr
-{
+class NewExpr : public Expr {
   protected:
     NamedType *cType;
     
@@ -194,8 +174,7 @@ class NewExpr : public Expr
     NewExpr(yyltype loc, NamedType *clsType);
 };
 
-class NewArrayExpr : public Expr
-{
+class NewArrayExpr : public Expr {
   protected:
     Expr *size;
     Type *elemType;
@@ -204,14 +183,12 @@ class NewArrayExpr : public Expr
     NewArrayExpr(yyltype loc, Expr *sizeExpr, Type *elemType);
 };
 
-class ReadIntegerExpr : public Expr
-{
+class ReadIntegerExpr : public Expr {
   public:
     ReadIntegerExpr(yyltype loc) : Expr(loc) {}
 };
 
-class ReadLineExpr : public Expr
-{
+class ReadLineExpr : public Expr {
   public:
     ReadLineExpr(yyltype loc) : Expr (loc) {}
 };

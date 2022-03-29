@@ -33,8 +33,7 @@
 #include "location.h"
 #include <iostream>
 
-class Node 
-{
+class Node {
   protected:
     yyltype *location;
     Node *parent;
@@ -49,14 +48,14 @@ class Node
 };
    
 
-class Identifier : public Node 
-{
+class Identifier : public Node {
   protected:
     char *name;
     
   public:
     Identifier(yyltype loc, const char *name);
     friend std::ostream& operator<<(std::ostream& out, Identifier *id) { return out << id->name; }
+    const char *GetName() { return name; }
 };
 
 
@@ -65,8 +64,7 @@ class Identifier : public Node
 // is discarded along with the states being popped, and an instance of
 // the Error class can stand in as the placeholder in the parse tree
 // when your parser can continue after an error.
-class Error : public Node
-{
+class Error : public Node {
   public:
     Error() : Node() {}
 };

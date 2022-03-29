@@ -6,6 +6,8 @@
 #include "ast_type.h"
 #include "ast_decl.h"
 #include "ast_expr.h"
+#include "codegen.h"
+#include "errors.h"
 
 
 Program::Program(List<Decl*> *d) {
@@ -27,6 +29,22 @@ void Program::Emit() {
      *      which makes for a great use of inheritance and
      *      polymorphism in the node classes.
      */
+    bool found = false;
+    for (int i = 0; i < decls-> NumElements(); i++) {
+        Decl* d = decls-> Nth(i);
+        if (!strcmp(d-> GetName(), "main") && d-> isFunct()) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        ReportError::NoMainFound();
+    }
+    CodeGenerator *cg = new CodeGenerator();
+    decls-> EmitAll(cg);
+    if (ReportError::NumErrors() == 0) {
+        cg-> DoFinalCodeGen();
+    }
 }
 
 StmtBlock::StmtBlock(List<VarDecl*> *d, List<Stmt*> *s) {

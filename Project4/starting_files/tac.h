@@ -37,8 +37,7 @@ class Mips;
  
 typedef enum {fpRelative, gpRelative} Segment;
 
-class Location
-{
+class Location {
   protected:
     const char *variableName;
     Segment segment;
