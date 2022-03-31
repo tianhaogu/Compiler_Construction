@@ -65,16 +65,35 @@ ForStmt::ForStmt(Expr *i, Expr *t, Expr *s, Stmt *b): LoopStmt(t, b) {
     (step=s)->SetParent(this);
 }
 
+void ForStmt::Emit(CodeGenerator *cg) {
+    // TODO
+}
+
+void WhileStmt::Emit(CodeGenerator *cg) {
+    // TODO
+}
+
 IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb): ConditionalStmt(t, tb) { 
     Assert(t != NULL && tb != NULL); // else can be NULL
     elseBody = eb;
     if (elseBody) elseBody->SetParent(this);
 }
 
+void IfStmt::Emit(CodeGenerator *cg) {
+    // TODO
+}
+
+void BreakStmt::Emit(CodeGenerator *cg) {
+    // TODO
+}
 
 ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc) { 
     Assert(e != NULL);
     (expr=e)->SetParent(this);
+}
+
+void ReturnStmt::Emit(CodeGenerator *cg) {
+    // TODO
 }
   
 PrintStmt::PrintStmt(List<Expr*> *a) {    
@@ -82,4 +101,6 @@ PrintStmt::PrintStmt(List<Expr*> *a) {
     (args=a)->SetParentAll(this);
 }
 
-
+void PrintStmt::Emit(CodeGenerator *cg) {
+    // TODO
+}

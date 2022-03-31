@@ -15,6 +15,7 @@
 
 #include "list.h"
 #include "ast.h"
+#include "codegen.h"
 
 class Decl;
 class VarDecl;
@@ -67,11 +68,13 @@ class ForStmt : public LoopStmt {
   
   public:
     ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
+    void Emit(CodeGenerator *cg);
 };
 
 class WhileStmt : public LoopStmt {
   public:
     WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
+    void Emit(CodeGenerator *cg);
 };
 
 class IfStmt : public ConditionalStmt {
@@ -80,11 +83,13 @@ class IfStmt : public ConditionalStmt {
   
   public:
     IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
+    void Emit(CodeGenerator *cg);
 };
 
 class BreakStmt : public Stmt {
   public:
     BreakStmt(yyltype loc) : Stmt(loc) {}
+    void Emit(CodeGenerator *cg);
 };
 
 class ReturnStmt : public Stmt {
@@ -93,6 +98,7 @@ class ReturnStmt : public Stmt {
   
   public:
     ReturnStmt(yyltype loc, Expr *expr);
+    void Emit(CodeGenerator *cg);
 };
 
 class PrintStmt : public Stmt {
@@ -101,6 +107,7 @@ class PrintStmt : public Stmt {
     
   public:
     PrintStmt(List<Expr*> *arguments);
+    void Emit(CodeGenerator *cg);
 };
 
 
