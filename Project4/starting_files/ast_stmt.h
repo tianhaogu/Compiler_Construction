@@ -28,13 +28,13 @@ class Program : public Node {
   public:
     Program(List<Decl*> *declList);
     void Check();
-    void Emit();
 };
 
 class Stmt : public Node {
   public:
     Stmt() : Node() {}
     Stmt(yyltype loc) : Node(loc) {}
+    virtual void Emit(CodeGenerator *cg) = 0;
 };
 
 class StmtBlock : public Stmt {
@@ -44,6 +44,7 @@ class StmtBlock : public Stmt {
     
   public:
     StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
+    void Emit(CodeGenerator *cg);
 };
 
   
@@ -57,9 +58,13 @@ class ConditionalStmt : public Stmt {
 };
 
 class LoopStmt : public ConditionalStmt {
+  protected:
+    char *L_End = NULL;
+
   public:
     LoopStmt(Expr *testExpr, Stmt *body)
             : ConditionalStmt(testExpr, body) {}
+    char* GetEndLabel() { return L_End; }
 };
 
 class ForStmt : public LoopStmt {

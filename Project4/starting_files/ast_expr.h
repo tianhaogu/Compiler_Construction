@@ -25,6 +25,7 @@ class Expr : public Stmt {
   public:
     Expr(yyltype loc) : Stmt(loc) {}
     Expr() : Stmt() {}
+    virtual Location *Emit(CodeGenerator *cg) = 0;
 };
 
 /* This node type is used for those places where an expression is optional.
@@ -40,6 +41,7 @@ class IntConstant : public Expr {
   
   public:
     IntConstant(yyltype loc, int val);
+    Location *Emit(CodeGenerator *cg) { return cg-> GenLoadConstant(value); }
 };
 
 class DoubleConstant : public Expr {
@@ -56,6 +58,7 @@ class BoolConstant : public Expr {
     
   public:
     BoolConstant(yyltype loc, bool val);
+    Location *Emit(CodeGenerator *cg) { return cg-> GenLoadConstant(value); }
 };
 
 class StringConstant : public Expr { 
@@ -64,6 +67,7 @@ class StringConstant : public Expr {
     
   public:
     StringConstant(yyltype loc, const char *val);
+    Location *Emit(CodeGenerator *cg) { return cg-> GenLoadConstant(value); }
 };
 
 class NullConstant: public Expr {
@@ -78,6 +82,7 @@ class Operator : public Node {
   public:
     Operator(yyltype loc, const char *tok);
     friend std::ostream& operator<<(std::ostream& out, Operator *o) { return out << o->tokenString; }
+    char *GetOpName() { return tokenString; }
  };
  
 class CompoundExpr : public Expr {
@@ -94,17 +99,20 @@ class ArithmeticExpr : public CompoundExpr {
   public:
     ArithmeticExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     ArithmeticExpr(Operator *op, Expr *rhs) : CompoundExpr(op,rhs) {}
+    Location *Emit(CodeGenerator *cg);
 };
 
 class RelationalExpr : public CompoundExpr {
   public:
     RelationalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
+    Location *Emit(CodeGenerator *cg);
 };
 
 class EqualityExpr : public CompoundExpr {
   public:
     EqualityExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     const char *GetPrintNameForNode() { return "EqualityExpr"; }
+    Location *Emit(CodeGenerator *cg);
 };
 
 class LogicalExpr : public CompoundExpr {
@@ -112,22 +120,26 @@ class LogicalExpr : public CompoundExpr {
     LogicalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     LogicalExpr(Operator *op, Expr *rhs) : CompoundExpr(op,rhs) {}
     const char *GetPrintNameForNode() { return "LogicalExpr"; }
+    Location *Emit(CodeGenerator *cg);
 };
 
 class AssignExpr : public CompoundExpr {
   public:
     AssignExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     const char *GetPrintNameForNode() { return "AssignExpr"; }
+    Location *Emit(CodeGenerator *cg);
 };
 
 class LValue : public Expr {
   public:
     LValue(yyltype loc) : Expr(loc) {}
+    Location *Emit(CodeGenerator *cg);
 };
 
 class This : public Expr {
   public:
     This(yyltype loc) : Expr(loc) {}
+    Location *Emit(CodeGenerator *cg);
 };
 
 class ArrayAccess : public LValue {
@@ -136,6 +148,7 @@ class ArrayAccess : public LValue {
     
   public:
     ArrayAccess(yyltype loc, Expr *base, Expr *subscript);
+    Location *Emit(CodeGenerator *cg);
 };
 
 /* Note that field access is used both for qualified names
@@ -150,6 +163,7 @@ class FieldAccess : public LValue {
     
   public:
     FieldAccess(Expr *base, Identifier *field); //ok to pass NULL base
+    Location *Emit(CodeGenerator *cg);
 };
 
 /* Like field access, call is used both for qualified base.field()
@@ -164,6 +178,7 @@ class Call : public Expr {
     
   public:
     Call(yyltype loc, Expr *base, Identifier *field, List<Expr*> *args);
+    Location *Emit(CodeGenerator *cg);
 };
 
 class NewExpr : public Expr {

@@ -44,8 +44,64 @@ CompoundExpr::CompoundExpr(Operator *o, Expr *r)
     (op=o)->SetParent(this);
     (right=r)->SetParent(this);
 }
-   
-  
+
+Location *ArithmeticExpr::Emit(CodeGenerator *cg) {
+    Location *L_left = NULL;
+    if (left != NULL) {
+        L_left = left-> Emit(cg);
+    }
+    else {
+        L_left = cg-> GenLoadConstant(0);
+    }
+    Location *L_right = right-> Emit(cg);
+    return cg-> GenBinaryOp(op->GetOpName(), L_left, L_right);
+}
+
+// A lot to do...
+Location *RelationalExpr::Emit(CodeGenerator *cg) {
+    Location *L_left = left-> Emit(cg);
+    Location *L_right = right-> Emit(cg);
+    return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+}
+
+// A lot to do...
+Location *EqualityExpr::Emit(CodeGenerator *cg) {
+    Location *L_left = left-> Emit(cg);
+    Location *L_right = right-> Emit(cg);
+    return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+}
+
+// Something to do...
+Location *LogicalExpr::Emit(CodeGenerator *cg) {
+    Location *L_left = NULL;
+    Location *L_right = right-> Emit(cg);
+    if (left != NULL) {
+        L_left = left-> Emit(cg);
+        return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+    }
+    else {
+        // TODO
+    }
+}
+
+Location *AssignExpr::Emit(CodeGenerator *cg) {
+    Location *L_left = left-> Emit(cg);
+    Location *L_right = right-> Emit(cg);
+    LValue *lvalue = dynamic_cast<LValue *>(left);
+    if (lvalue != NULL) {
+        if (dynamic_cast<ArrayAccess *>(lvalue)) {
+            cg-> GenStore(L_left, L_right);
+        }
+        else if (dynamic_cast<FieldAccess *>(lvalue)) {
+            cg-> GenStore(L_left, L_right, /*non-zero offset, need to fix*/);
+        }
+        else {
+            cg-> GenAssign(L_left, L_right);
+        }
+    }
+    return L_left;
+}
+
 ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc) {
     (base=b)->SetParent(this); 
     (subscript=s)->SetParent(this);

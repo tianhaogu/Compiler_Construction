@@ -53,6 +53,11 @@ StmtBlock::StmtBlock(List<VarDecl*> *d, List<Stmt*> *s) {
     (stmts=s)->SetParentAll(this);
 }
 
+void StmtBlock::Emit(CodeGenerator *cg) {
+    decls-> EmitAll(cg);
+    stmts-> EmitAll(cg);
+}
+
 ConditionalStmt::ConditionalStmt(Expr *t, Stmt *b) { 
     Assert(t != NULL && b != NULL);
     (test=t)->SetParent(this); 
@@ -66,11 +71,29 @@ ForStmt::ForStmt(Expr *i, Expr *t, Expr *s, Stmt *b): LoopStmt(t, b) {
 }
 
 void ForStmt::Emit(CodeGenerator *cg) {
-    // TODO
+    char *L_Before = cg-> NewLabel();
+    char *L_After = cg-> NewLabel();
+    cg-> GenLabel(L_Before);
+    init-> Emit(cg);
+    Location *t = test-> Emit(cg);
+    cg-> GenIfZ(t, L_After);
+    body-> Emit(cg);
+    step-> Emit(cg);
+    cg-> GenGoto(L_Before);
+    cg-> GenLabel(L_After);
+    L_End = L_After;
 }
 
 void WhileStmt::Emit(CodeGenerator *cg) {
-    // TODO
+    char *L_Before = cg-> NewLabel();
+    char *L_After = cg-> NewLabel();
+    cg-> GenLabel(L_Before);
+    Location *t = test-> Emit(cg);
+    cg-> GenIfZ(t, L_After);
+    body-> Emit(cg);
+    cg-> GenGoto(L_Before);
+    cg-> GenLabel(L_After);
+    L_End = L_After;
 }
 
 IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb): ConditionalStmt(t, tb) { 
@@ -79,12 +102,33 @@ IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb): ConditionalStmt(t, tb) {
     if (elseBody) elseBody->SetParent(this);
 }
 
+// Not sure here...
 void IfStmt::Emit(CodeGenerator *cg) {
-    // TODO
+    char *L_AfterIf = cg-> NewLabel();
+    char *L_AfterElse = cg-> NewLabel();
+    Location *t = test-> Emit(cg);
+    cg-> GenIfZ(t, L_AfterIf);
+    body-> Emit(cg);
+    if (elseBody) {
+        cg-> GenGoto(L_AfterElse);
+    }
+    cg-> GenLabel(L_AfterIf);
+    if (elseBody) {
+        elseBody-> Emit(cg);
+        cg-> GenLabel(L_AfterElse);
+    }
 }
 
 void BreakStmt::Emit(CodeGenerator *cg) {
-    // TODO
+    Node *p = parent;
+    while (p) {
+        if (dynamic_cast<LoopStmt *>(p)) {
+            break;
+        }
+        p = p-> GetParent();
+    }
+    char *endLabel = dynamic_cast<LoopStmt *>(p)-> GetEndLabel();
+    cg-> GenGoto(endLabel);
 }
 
 ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc) { 
@@ -93,7 +137,8 @@ ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc) {
 }
 
 void ReturnStmt::Emit(CodeGenerator *cg) {
-    // TODO
+    Location *t = expr-> Emit(cg);
+    cg-> GenReturn(t);
 }
   
 PrintStmt::PrintStmt(List<Expr*> *a) {    
@@ -102,5 +147,19 @@ PrintStmt::PrintStmt(List<Expr*> *a) {
 }
 
 void PrintStmt::Emit(CodeGenerator *cg) {
-    // TODO
+    for (int i = 0; i < args-> NumElements(); i++) {
+        Expr *currArg = args-> Nth(i);
+        Location *t = currArg-> Emit(cg);
+        BuiltIn builtIn;
+        if (currArg-> CheckType()-> IsEquivalentTo(Type::intType)) {
+            builtIn = BuiltIn::PrintInt;
+        }
+        if (currArg-> CheckType()-> IsEquivalentTo(Type::stringType)) {
+            builtIn = BuiltIn::PrintString;
+        }
+        if (currArg-> CheckType()-> IsEquivalentTo(Type::boolType)) {
+            builtIn = BuiltIn::PrintBool;
+        }
+        cg-> GenBuiltInCall(builtIn, t, NULL);
+    }
 }
