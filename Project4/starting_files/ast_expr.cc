@@ -57,18 +57,47 @@ Location *ArithmeticExpr::Emit(CodeGenerator *cg) {
     return cg-> GenBinaryOp(op->GetOpName(), L_left, L_right);
 }
 
-// A lot to do...
 Location *RelationalExpr::Emit(CodeGenerator *cg) {
     Location *L_left = left-> Emit(cg);
     Location *L_right = right-> Emit(cg);
-    return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+    if (strcmp(op-> GetOpName(), "<") == 0) {
+        return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+    }
+    else if (strcmp(op-> GetOpName(), "<=") == 0) {
+        Location *L_less = cg-> GenBinaryOp("<", L_left, L_right);
+        Location *L_equal = cg-> GenBinaryOp("==", L_left, L_right);
+        return cg-> GenBinaryOp("||", L_less, L_equal);
+    }
+    else if (strcmp(op-> GetOpName(), ">") == 0) {
+        return cg-> GenBinaryOp("<", L_right, L_left);
+    }
+    else if (strcmp(op-> GetOpName(), ">=") == 0) {
+        Location *L_less = cg-> GenBinaryOp("<", L_right, L_left);
+        Location *L_equal = cg-> GenBinaryOp("==", L_right, L_left);
+        return cg-> GenBinaryOp("||", L_less, L_equal);
+    }
+    return NULL;
 }
 
-// A lot to do...
 Location *EqualityExpr::Emit(CodeGenerator *cg) {
     Location *L_left = left-> Emit(cg);
     Location *L_right = right-> Emit(cg);
-    return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+    if (strcmp(op-> GetOpName(), "==") == 0) {
+        if (left-> CheckType()-> IsEquivalentTo(Type::stringType)) {
+            return cg-> GenBuiltInCall(BuiltIn::StringEqual, L_left, L_right);
+        }
+        else {
+            return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
+        }
+    }
+    else {
+        Location *L_zero = cg-> GenLoadConstant(0);
+        Location *L_equal = (left-> CheckType()-> IsEquivalentTo(Type::stringType)) ? \
+                cg-> GenBuiltInCall(BuiltIn::StringEqual, L_left, L_right) : \
+                cg-> GenBinaryOp("==", L_left, L_right);
+        return cg-> GenBinaryOp("==", L_equal, L_zero);
+    }
+    return NULL;
 }
 
 // Something to do...
