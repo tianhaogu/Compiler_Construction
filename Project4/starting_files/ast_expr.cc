@@ -167,12 +167,19 @@ Call::Call(yyltype loc, Expr *b, Identifier *f, List<Expr*> *a) : Expr(loc)  {
     (actuals=a)->SetParentAll(this);
 }
  
-
 NewExpr::NewExpr(yyltype loc, NamedType *c) : Expr(loc) { 
   Assert(c != NULL);
   (cType=c)->SetParent(this);
 }
 
+// A lot more to do...
+Location *NewExpr::Emit(CodeGenerator *cg) {
+    const char *className = cType-> GetTypeName();
+    Location *L_call = cg-> GenBuiltInCall(BuiltIn::Alloc, /*class size*/);
+    Location *L_vtable = cg-> GenLoadLabel(className);
+    cg-> GenStore(L_call, L_vtable);
+    return L_call;
+}
 
 NewArrayExpr::NewArrayExpr(yyltype loc, Expr *sz, Type *et) : Expr(loc) {
     Assert(sz != NULL && et != NULL);

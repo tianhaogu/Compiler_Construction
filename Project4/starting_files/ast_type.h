@@ -40,6 +40,7 @@ class NamedType : public Type {
   public:
     NamedType(Identifier *i);
     
+    const char *GetTypeName() { return id->GetName(); }
     void PrintToStream(std::ostream& out) { out << id; }
 };
 
