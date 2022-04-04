@@ -10,6 +10,8 @@
 Location::Location(Segment s, int o, const char *name) :
     variableName(strdup(name)), segment(s), offset(o){}
 
+Location::Location(Location *elem, int offset) :
+    variableName(elem-> variableName), segment(elem-> segment), offset(elem-> offset) {}
  
 void Instruction::Print() {
     printf("\t%s ;\n", printed);

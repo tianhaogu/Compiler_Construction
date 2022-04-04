@@ -136,6 +136,12 @@ ArrayAccess::ArrayAccess(yyltype loc, Expr *b, Expr *s) : LValue(loc) {
     (base=b)->SetParent(this); 
     (subscript=s)->SetParent(this);
 }
+
+Location *ArrayAccess::Emit(CodeGenerator *cg) {
+    Location* L_base = base-> Emit(cg);
+    Location* L_subscript = subscript-> Emit(cg);
+    return cg-> GenSubscript(L_base, L_subscript);
+}
      
 FieldAccess::FieldAccess(Expr *b, Identifier *f) 
   : LValue(b? Join(b->GetLocation(), f->GetLocation()) : *f->GetLocation()) {
@@ -145,6 +151,13 @@ FieldAccess::FieldAccess(Expr *b, Identifier *f)
     (field=f)->SetParent(this);
 }
 
+// A lot more to do...
+Location *FieldAccess::Emit(CodeGenerator *cg) {
+    Location *L_base = NULL;
+    if (base != NULL) {
+        L_base = base-> Emit(cg);
+    }
+}
 
 Call::Call(yyltype loc, Expr *b, Identifier *f, List<Expr*> *a) : Expr(loc)  {
     Assert(f != NULL && a != NULL); // b can be be NULL (just means no explicit base)
@@ -167,4 +180,15 @@ NewArrayExpr::NewArrayExpr(yyltype loc, Expr *sz, Type *et) : Expr(loc) {
     (elemType=et)->SetParent(this);
 }
 
-       
+Location *NewArrayExpr::Emit(CodeGenerator *cg) {
+    Location *L_size = size-> Emit(cg);
+    return cg-> GenNewArray(L_size);
+}
+
+Location *ReadIntegerExpr::Emit(CodeGenerator *cg) {
+    return cg-> GenBuiltInCall(BuiltIn::ReadInteger);
+}
+
+Location *ReadLineExpr::Emit(CodeGenerator *cg) {
+    return cg-> GenBuiltInCall(BuiltIn::ReadLine);
+}

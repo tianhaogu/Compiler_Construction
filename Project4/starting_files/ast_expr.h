@@ -187,6 +187,7 @@ class NewExpr : public Expr {
     
   public:
     NewExpr(yyltype loc, NamedType *clsType);
+    Location *Emit(CodeGenerator *cg);
 };
 
 class NewArrayExpr : public Expr {
@@ -196,16 +197,19 @@ class NewArrayExpr : public Expr {
     
   public:
     NewArrayExpr(yyltype loc, Expr *sizeExpr, Type *elemType);
+    Location *Emit(CodeGenerator *cg);
 };
 
 class ReadIntegerExpr : public Expr {
   public:
     ReadIntegerExpr(yyltype loc) : Expr(loc) {}
+    Location *Emit(CodeGenerator *cg);
 };
 
 class ReadLineExpr : public Expr {
   public:
     ReadLineExpr(yyltype loc) : Expr (loc) {}
+    Location *Emit(CodeGenerator *cg);
 };
 
     
