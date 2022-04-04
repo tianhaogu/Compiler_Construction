@@ -165,6 +165,10 @@ class CodeGenerator {
          // but instead just print the untranslated Tac. It may be
          // useful in debugging to first make sure your Tac is correct.
     void DoFinalCodeGen();
+
+    Location *GenNewArray(Location *numElements);
+    void GenHaltWithMessage(const char *msg);
+    Location *GenSubscript(Location *array, Location *index);
 };
 
 #endif

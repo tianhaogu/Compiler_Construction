@@ -9,6 +9,7 @@
 #include <string.h>
 #include "tac.h"
 #include "mips.h"
+#include "errors.h"
   
 CodeGenerator::CodeGenerator() {
     code = new List<Instruction*>();
@@ -178,4 +179,42 @@ void CodeGenerator::DoFinalCodeGen() {
     }
 }
 
+Location *CodeGenerator::GenNewArray(Location *numElems) {
+    Location *one = GenLoadConstant(1);
+    Location *isNonpositive = GenBinaryOp("<", numElems, one);
+    const char *pastError = NewLabel();
+    GenIfZ(isNonpositive, pastError);
+    GenHaltWithMessage(err_arr_bad_size);
+    GenLabel(pastError);
 
+    Location *arraySize = GenLoadConstant(1);
+    Location *num = GenBinaryOp("+", arraySize, numElems);
+    Location *four = GenLoadConstant(VarSize);
+    Location *bytes = GenBinaryOp("*", num, four);
+    Location *result = GenBuiltInCall(Alloc, bytes);
+    GenStore(result, numElems);
+    return GenBinaryOp("+", result, four);
+}
+
+void CodeGenerator::GenHaltWithMessage(const char *message) {
+   Location *msg = GenLoadConstant(message);
+   GenBuiltInCall(PrintString, msg);
+   GenBuiltInCall(Halt, NULL);
+}
+
+Location *CodeGenerator::GenSubscript(Location *array, Location *index) {
+    Location *zero = GenLoadConstant(0);
+    Location *isNegative = GenBinaryOp("<", index, zero);
+    Location *count = GenLoad(array, -4);
+    Location *isWithinRange = GenBinaryOp("<", index, count);
+    Location *pastEnd = GenBinaryOp("==", isWithinRange, zero);
+    Location *outOfRange = GenBinaryOp("||", isNegative, pastEnd);
+    const char *pastError = NewLabel();
+    GenIfZ(outOfRange, pastError);
+    GenHaltWithMessage(err_arr_out_of_bounds);
+    GenLabel(pastError);
+    Location *four = GenLoadConstant(VarSize);
+    Location *offset = GenBinaryOp("*", four, index);
+    Location *elem = GenBinaryOp("+", array, offset);
+    return new Location(elem, 0); 
+}
