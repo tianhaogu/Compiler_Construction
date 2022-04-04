@@ -100,7 +100,6 @@ Location *EqualityExpr::Emit(CodeGenerator *cg) {
     return NULL;
 }
 
-// Something to do...
 Location *LogicalExpr::Emit(CodeGenerator *cg) {
     Location *L_left = NULL;
     Location *L_right = right-> Emit(cg);
@@ -109,13 +108,15 @@ Location *LogicalExpr::Emit(CodeGenerator *cg) {
         return cg-> GenBinaryOp(op-> GetOpName(), L_left, L_right);
     }
     else {
-        // TODO
+        L_left = cg-> GenLoadConstant(0);
+        return cg-> GenBinaryOp("==", L_right, L_left);
     }
+    return NULL;
 }
 
 Location *AssignExpr::Emit(CodeGenerator *cg) {
-    Location *L_left = left-> Emit(cg);
     Location *L_right = right-> Emit(cg);
+    Location *L_left = left-> Emit(cg);
     LValue *lvalue = dynamic_cast<LValue *>(left);
     if (lvalue != NULL) {
         if (dynamic_cast<ArrayAccess *>(lvalue)) {
