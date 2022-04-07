@@ -40,6 +40,7 @@ class VarDecl : public Decl {
     
   public:
     VarDecl(Identifier *name, Type *type);
+    Location *Emit(CodeGenerator *cg) { return NULL; }
 };
 
 class ClassDecl : public Decl {
@@ -51,6 +52,7 @@ class ClassDecl : public Decl {
   public:
     ClassDecl(Identifier *name, NamedType *extends, 
               List<NamedType*> *implements, List<Decl*> *members);
+    Location *Emit(CodeGenerator *cg);
     bool isClass() { return true; }
 };
 
@@ -72,6 +74,7 @@ class FnDecl : public Decl {
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
     void SetFunctionBody(Stmt *b);
+    Location *Emit(CodeGenerator *cg);
     bool isFunct() { return true; }
 };
 

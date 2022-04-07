@@ -46,5 +46,21 @@ void FnDecl::SetFunctionBody(Stmt *b) {
     (body=b)->SetParent(this);
 }
 
-
+Location *FnDecl::Emit(CodeGenerator *cg) {
+    cg-> GenLabel(/*need to get the function label in char* type.*/);
+    BeginFunc *bgfunc = cg-> GenBeginFunc();
+    int offset_param = CodeGenerator::OffsetToFirstParam;
+    for (int i = 0; i < formals-> NumElements(); i++) {
+        VarDecl *vardecl = formals-> Nth(i);
+        Location *L_param = new Location(Segment::fpRelative, offset_param, vardecl-> GetName());
+        offset_param += CodeGenerator::VarSize;
+    }
+    if (body != NULL) {
+        body-> Emit(cg);
+    }
+    int offset_local = CodeGenerator::OffsetToFirstLocal;
+    bgfunc-> SetFrameSize(offset_local); // need to get number of variables according to calculation within body.
+    cg-> GenEndFunc();
+    return NULL;
+}
 
