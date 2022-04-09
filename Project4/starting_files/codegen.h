@@ -4,11 +4,6 @@
  * instructions (using the Tac class and its subclasses) and store the
  * instructions in a sequential list, ready for further processing or
  * translation to MIPS as part of final code generation.
- *
- *    pp4:  The class as given supports the basic Tac instructions,
- *          you will need to extend it to handle the more complex
- *          operations (accessing instance variables, dynamic method
- *          dispatch, array length(), etc.)
  */
 
 #ifndef _H_codegen
@@ -17,6 +12,7 @@
 #include <stdlib.h>
 #include "list.h"
 #include "tac.h"
+class FnDecl;
  
 
               // These codes are used to identify the built-in functions
@@ -26,6 +22,8 @@ typedef enum { Alloc, ReadLine, ReadInteger, StringEqual,
 class CodeGenerator {
   private:
     List<Instruction*> *code;
+    int curStackOffset, curGlobalOffset;
+    BeginFunc *insideFn;
 
   public:
            // Here are some class constants to remind you of the offsets
@@ -49,11 +47,12 @@ class CodeGenerator {
          // generate any Tac instructions (see GenLabel below if needed)
     char *NewLabel();
 
-    
          // Creates and returns a Location for a new uniquely named
          // temp variable. Does not generate any Tac instructions
     Location *GenTempVar();
 
+    Location *GenLocalVariable(const char *varName);
+    Location *GenGlobalVariable(const char *varName);
          // Generates Tac instructions to load a constant value. Creates
          // a new temp var to hold the result. The constant 
          // value is passed as an integer, it can be 0 for integer zero,
@@ -146,7 +145,7 @@ class CodeGenerator {
 
          // These methods generate the Tac instructions that mark the start
          // and end of a function/method definition. 
-    BeginFunc *GenBeginFunc();
+    BeginFunc *GenBeginFunc(FnDecl *fn);
     void GenEndFunc();
 
     
@@ -167,8 +166,14 @@ class CodeGenerator {
     void DoFinalCodeGen();
 
     Location *GenNewArray(Location *numElements);
-    void GenHaltWithMessage(const char *msg);
+    Location *GenArrayLen(Location *array);
+    Location *GenNew(const char *vTableLabel, int instanceSize);
+    Location *GenDynamicDispatch(Location *obj, int vtableOffset, List<Location*> *args, bool hasReturnValue);
     Location *GenSubscript(Location *array, Location *index);
+    Location *GenFunctionCall(const char *fnLabel, List<Location*> *args, bool hasReturnValue);
+    // private helper, not for public user
+    Location *GenMethodCall(Location*rcvr, Location*meth, List<Location*> *args, bool hasReturnValue);
+    void GenHaltWithMessage(const char *msg);
 };
 
 #endif

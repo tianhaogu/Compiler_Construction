@@ -22,17 +22,20 @@ class Stmt;
 class Decl : public Node {
   protected:
     Identifier *id;
+    int offset;
   
   public:
     Decl(Identifier *name);
     friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
     const char *GetName() { return id-> GetName(); }
-    Identifier *getID() { return id; }
+    Identifier *GetID() { return id; }
 
     virtual bool isClass() { return false; }
     virtual bool isInter() { return false; }
     virtual bool isFunct() { return false; }
-    virtual void Emit(CodeGenerator *cg) {}
+    virtual Location *Emit(CodeGenerator *cg) { return NULL; }
+    void SetOffset(int off) { offset = off; }
+    int GetOffset() { return offset; }
 };
 
 class VarDecl : public Decl {
@@ -46,6 +49,8 @@ class VarDecl : public Decl {
     void SetLocation(Location *l) { loc = l; }
     Location *GetLocation() { return loc; }
     Type *GetType() { return type; }
+    bool InClass() { return dynamic_cast<ClassDecl *>(parent); }
+    Location *Emit(CodeGenerator *cg);
 };
 
 class ClassDecl : public Decl {
@@ -60,7 +65,6 @@ class ClassDecl : public Decl {
     
     Location *Emit(CodeGenerator *cg);
     bool isClass() { return true; }
-    void Emit(CodeGenerator *cg);
 };
 
 class InterfaceDecl : public Decl {
@@ -79,17 +83,19 @@ class FnDecl : public Decl {
     Type *returnType;
     Stmt *body;
     std::string label;
+    Location *loc;
     
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
+    List<VarDecl*> *GetFormals() { return formals; }
     void SetFunctionBody(Stmt *b);
 
     bool isFunct() { return true; }
+    bool IsMethodDecl();
     void SetLabel(const std::string &s) { label = s; }
     const char *GetLabel() { return label.c_str(); }
-    Type *getType() { return returnType; }
-    void Emit(CodeGenerator *cg);
-
+    Type *GetType() { return returnType; }
+    Location *Emit(CodeGenerator *cg);
 };
 
 #endif

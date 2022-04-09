@@ -36,6 +36,7 @@ class Stmt : public Node {
     Stmt() : Node() {}
     Stmt(yyltype loc) : Node(loc) {}
     virtual void Emit(CodeGenerator *cg) = 0;
+    virtual int GetFrameSize() { return 0; }
 };
 
 class StmtBlock : public Stmt {

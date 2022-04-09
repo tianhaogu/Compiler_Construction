@@ -55,6 +55,7 @@ class Node {
     void AddFn(const char *name, FnDecl *fn) { fns.Enter(name, fn, true); }
     void RemoveFn(const char *name, FnDecl *fn) { fns.Remove(name, fn); }
     FnDecl *SearchFn(const char *name) { return fns.Lookup(name); }
+    
 };
    
 

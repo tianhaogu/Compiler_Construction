@@ -17,6 +17,21 @@ VarDecl::VarDecl(Identifier *n, Type *t) : Decl(n) {
     Assert(n != NULL && t != NULL);
     (type=t)->SetParent(this);
 }
+
+Location *VarDecl::Emit(CodeGenerator *cg) {
+    if (loc == NULL)
+    {
+        if (dynamic_cast<Program *>(parent))
+        {
+            loc = cg.GenGlobalVariable(GetName());
+        }
+        else if (dynamic_cast<FnDecl *>(parent))
+        {
+            loc = cg.GenLocalVariable(GetName());
+        }
+    }
+    return loc;
+}
   
 
 ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType*> *imp, List<Decl*> *m) : Decl(n) {
@@ -46,21 +61,27 @@ void FnDecl::SetFunctionBody(Stmt *b) {
     (body=b)->SetParent(this);
 }
 
-// Location *FnDecl::Emit(CodeGenerator *cg) {
-//     cg-> GenLabel(/*need to get the function label in char* type.*/);
-//     BeginFunc *bgfunc = cg-> GenBeginFunc();
-//     int offset_param = CodeGenerator::OffsetToFirstParam;
-//     for (int i = 0; i < formals-> NumElements(); i++) {
-//         VarDecl *vardecl = formals-> Nth(i);
-//         Location *L_param = new Location(Segment::fpRelative, offset_param, vardecl-> GetName());
-//         offset_param += CodeGenerator::VarSize;
-//     }
-//     if (body != NULL) {
-//         body-> Emit(cg);
-//     }
-//     int offset_local = CodeGenerator::OffsetToFirstLocal;
-//     bgfunc-> SetFrameSize(offset_local); // need to get number of variables according to calculation within body.
-//     cg-> GenEndFunc();
-//     return NULL;
-// }
+/*modify the ast_decl.cc to add support for checking for pure function declaration*/
+bool FnDecl::IsMethodDecl() 
+  { return dynamic_cast<ClassDecl*>(parent) != NULL || dynamic_cast<InterfaceDecl*>(parent) != NULL; }
+
+Location *FnDecl::Emit(CodeGenerator *cg) {
+    cg-> GenLabel(/*need to get the function label in char* type.*/);
+    BeginFunc *bgfunc = cg-> GenBeginFunc();
+    int offset_param = CodeGenerator::OffsetToFirstParam;
+    for (int i = 0; i < formals-> NumElements(); i++) {
+        VarDecl *vardecl = formals-> Nth(i);
+        Location *L_param = new Location(Segment::fpRelative, offset_param, vardecl-> GetName());
+        vardecl.SetLocation(L_param);
+        offset_param += CodeGenerator::VarSize;
+    }
+    if (body != NULL) {
+        body-> Emit(cg);
+    }
+    // int offset_local = CodeGenerator::OffsetToFirstLocal;
+    // bgfunc-> SetFrameSize(offset_local); // need to get number of variables according to calculation within body.
+    bgfunc->SetFrameSize(body->GetFrameSize());
+    cg-> GenEndFunc();
+    return NULL;
+}
 

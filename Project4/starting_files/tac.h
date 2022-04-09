@@ -37,19 +37,27 @@ class Mips;
  
 typedef enum {fpRelative, gpRelative} Segment;
 
-class Location {
+class Location
+{
   protected:
     const char *variableName;
     Segment segment;
     int offset;
+    Location *reference;
+    int refOffset;
 	  
   public:
     Location(Segment seg, int offset, const char *name);
-    Location(Location *elem, int offset);
-
+    Location(Location *base, int refOff) :
+	variableName(base->variableName), segment(base->segment),
+	offset(base->offset), reference(base), refOffset(refOff) {}
+ 
     const char *GetName()           { return variableName; }
     Segment GetSegment()            { return segment; }
     int GetOffset()                 { return offset; }
+    bool IsReference()              { return reference != NULL; }
+    Location *GetReference()        { return reference; }
+    int GetRefOffset()              { return refOffset; }
 };
  
 
@@ -59,7 +67,7 @@ class Location {
   
 class Instruction {
     protected:
-      char printed[128];
+        char printed[128];
 	  
     public:
 	virtual void Print();
