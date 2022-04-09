@@ -38,6 +38,9 @@ class Node {
     yyltype *location;
     Node *parent;
 
+    Hashtable<VarDecl*> vars;
+    Hashtable<FnDecl*> fns;
+
   public:
     Node(yyltype loc);
     Node();
@@ -45,6 +48,13 @@ class Node {
     yyltype *GetLocation()   { return location; }
     void SetParent(Node *p)  { parent = p; }
     Node *GetParent()        { return parent; }
+
+    void AddVar(const char *name, VarDecl *var) { vars.Enter(name, var, false); }
+    void RemoveVar(const char *name, VarDecl *var) { vars.Remove(name, var); }
+    VarDecl *SearchVar(const char *name) { return vars.Lookup(name); }
+    void AddFn(const char *name, FnDecl *fn) { fns.Enter(name, fn, true); }
+    void RemoveFn(const char *name, FnDecl *fn) { fns.Remove(name, fn); }
+    FnDecl *SearchFn(const char *name) { return fns.Lookup(name); }
 };
    
 

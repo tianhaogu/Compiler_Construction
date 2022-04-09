@@ -8,6 +8,7 @@
 #include "ast_expr.h"
 #include "codegen.h"
 #include "errors.h"
+#include "scope.h"
 
 
 Program::Program(List<Decl*> *d) {

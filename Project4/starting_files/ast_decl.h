@@ -32,15 +32,20 @@ class Decl : public Node {
     virtual bool isClass() { return false; }
     virtual bool isInter() { return false; }
     virtual bool isFunct() { return false; }
+    virtual void Emit(CodeGenerator *cg) {}
 };
 
 class VarDecl : public Decl {
   protected:
     Type *type;
+    Location *loc = NULL;
     
   public:
     VarDecl(Identifier *name, Type *type);
-    Location *Emit(CodeGenerator *cg) { return NULL; }
+
+    void SetLocation(Location *l) { loc = l; }
+    Location *GetLocation() { return loc; }
+    Type *GetType() { return type; }
 };
 
 class ClassDecl : public Decl {
@@ -52,8 +57,10 @@ class ClassDecl : public Decl {
   public:
     ClassDecl(Identifier *name, NamedType *extends, 
               List<NamedType*> *implements, List<Decl*> *members);
+    
     Location *Emit(CodeGenerator *cg);
     bool isClass() { return true; }
+    void Emit(CodeGenerator *cg);
 };
 
 class InterfaceDecl : public Decl {
@@ -62,6 +69,7 @@ class InterfaceDecl : public Decl {
     
   public:
     InterfaceDecl(Identifier *name, List<Decl*> *members);
+
     bool isInter() { return true; }
 };
 
@@ -70,12 +78,18 @@ class FnDecl : public Decl {
     List<VarDecl*> *formals;
     Type *returnType;
     Stmt *body;
+    std::string label;
     
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
     void SetFunctionBody(Stmt *b);
-    Location *Emit(CodeGenerator *cg);
+
     bool isFunct() { return true; }
+    void SetLabel(const std::string &s) { label = s; }
+    const char *GetLabel() { return label.c_str(); }
+    Type *getType() { return returnType; }
+    void Emit(CodeGenerator *cg);
+
 };
 
 #endif

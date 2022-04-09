@@ -28,6 +28,7 @@ class Program : public Node {
   public:
     Program(List<Decl*> *declList);
     void Check();
+    void Emit();
 };
 
 class Stmt : public Node {
