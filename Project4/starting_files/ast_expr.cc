@@ -166,6 +166,23 @@ Call::Call(yyltype loc, Expr *b, Identifier *f, List<Expr*> *a) : Expr(loc)  {
     (field=f)->SetParent(this);
     (actuals=a)->SetParentAll(this);
 }
+
+Location *Call::Emit(CodeGenerator *cg) {
+    List<Location *> *args;
+    for (int i = 0; i < actuals-> NumElements(); i++) {
+        Location* loc = actuals-> Nth(i)-> Emit(cg);
+        args-> Append(loc);
+    }
+    FnDecl *fndecl = dynamic_cast<FnDecl *>(field); // need to convert to fndecl from identifier
+    bool hasReturnValue = (fndecl-> GetType()->IsEquivalentTo(Type::voidType));
+    if (base == NULL) {
+        return cg-> GenFunctionCall(fndecl-> GetLabel(), args, hasReturnValue);
+    }
+    else {
+        Location * loc = base-> Emit(cg);
+        return cg-> GenDynamicDispatch(loc, args, fndecl-> GetLocalOffset(), hasReturnValue);
+    }
+}
  
 NewExpr::NewExpr(yyltype loc, NamedType *c) : Expr(loc) { 
   Assert(c != NULL);

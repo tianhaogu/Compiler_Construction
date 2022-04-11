@@ -5,6 +5,7 @@
 #include "ast_decl.h"
 #include "ast_type.h"
 #include "ast_stmt.h"
+#include <string>
         
          
 Decl::Decl(Identifier *n) : Node(*n->GetLocation()) {
@@ -23,11 +24,11 @@ Location *VarDecl::Emit(CodeGenerator *cg) {
     {
         if (dynamic_cast<Program *>(parent))
         {
-            loc = cg.GenGlobalVariable(GetName());
+            loc = cg-> GenGlobalVariable(GetName());
         }
         else if (dynamic_cast<FnDecl *>(parent))
         {
-            loc = cg.GenLocalVariable(GetName());
+            loc = cg-> GenLocalVariable(GetName());
         }
     }
     return loc;
@@ -41,6 +42,31 @@ ClassDecl::ClassDecl(Identifier *n, NamedType *ex, List<NamedType*> *imp, List<D
     if (extends) extends->SetParent(this);
     (implements=imp)->SetParentAll(this);
     (members=m)->SetParentAll(this);
+}
+
+void ClassDecl::BuildClass() {
+    if (extends != NULL) {}
+    for (int i = 0; i < members-> NumElements(); i++) {
+        if (dynamic_cast<VarDecl *>(members-> Nth(i))) {
+            lastVarOffset -= CodeGenerator::VarSize;
+        }
+        if (dynamic_cast<FnDecl *>(members-> Nth(i))) {
+            lastMethodOffset += CodeGenerator::VarSize;
+            FnDecl *fndecl = dynamic_cast<FnDecl *>(members-> Nth(i));
+            std::string clsName(GetName());
+            clsName += '.';
+            const char *clsName_ = clsName.c_str();
+            const char *fnName = fndecl-> GetLabel();
+            methodLabels-> Append(clsName_ + fnName);
+        }
+    }
+}
+
+Location *ClassDecl::Emit(CodeGenerator *cg) {
+    BuildClass();
+    members-> EmitAll(cg);
+    cg-> GenVTable(GetName(), methodLabels);
+    return NULL;
 }
 
 
@@ -67,12 +93,13 @@ bool FnDecl::IsMethodDecl()
 
 Location *FnDecl::Emit(CodeGenerator *cg) {
     cg-> GenLabel(/*need to get the function label in char* type.*/);
-    BeginFunc *bgfunc = cg-> GenBeginFunc();
+    BeginFunc *bgfunc = cg-> GenBeginFunc(this);
     int offset_param = CodeGenerator::OffsetToFirstParam;
+    if (IsMethodDecl()) {}
     for (int i = 0; i < formals-> NumElements(); i++) {
         VarDecl *vardecl = formals-> Nth(i);
         Location *L_param = new Location(Segment::fpRelative, offset_param, vardecl-> GetName());
-        vardecl.SetLocation(L_param);
+        vardecl-> SetLocation(L_param);
         offset_param += CodeGenerator::VarSize;
     }
     if (body != NULL) {

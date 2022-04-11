@@ -42,6 +42,7 @@ class VarDecl : public Decl {
   protected:
     Type *type;
     Location *loc = NULL;
+    Location *rtLoc;
     
   public:
     VarDecl(Identifier *name, Type *type);
@@ -58,11 +59,15 @@ class ClassDecl : public Decl {
     List<Decl*> *members;
     NamedType *extends;
     List<NamedType*> *implements;
+    List<const char*> *methodLabels;
+    int lastVarOffset = CodeGenerator::OffsetToFirstLocal + 4;
+    int lastMethodOffset = 0;
 
   public:
     ClassDecl(Identifier *name, NamedType *extends, 
               List<NamedType*> *implements, List<Decl*> *members);
     
+    void BuildClass();
     Location *Emit(CodeGenerator *cg);
     bool isClass() { return true; }
 };
@@ -84,6 +89,7 @@ class FnDecl : public Decl {
     Stmt *body;
     std::string label;
     Location *loc;
+    int offset_local = CodeGenerator::OffsetToFirstLocal;
     
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
@@ -95,6 +101,7 @@ class FnDecl : public Decl {
     void SetLabel(const std::string &s) { label = s; }
     const char *GetLabel() { return label.c_str(); }
     Type *GetType() { return returnType; }
+    int GetLocalOffset() { return offset_local; }
     Location *Emit(CodeGenerator *cg);
 };
 
