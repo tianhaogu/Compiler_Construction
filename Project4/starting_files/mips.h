@@ -20,6 +20,7 @@
 
 #include "tac.h"
 #include "list.h"
+#include <map>
 class Location;
 
 
@@ -38,6 +39,7 @@ class Mips {
     } regs[NumRegs];
 
     Register rs, rt, rd;
+    std::map<Location*,Register> allocation;
 
     typedef enum { ForRead, ForWrite } Reason;
     
@@ -49,7 +51,7 @@ class Mips {
     static const char *mipsName[BinaryOp::NumOps];
     static const char *NameForTac(BinaryOp::OpCode code);
 
-  public:
+ public:
     
     Mips();
 
@@ -82,8 +84,11 @@ class Mips {
     void EmitVTable(const char *label, List<const char*> *methodLabels);
 
     void EmitPreamble();
+
+    void AllocateRegisters(List<Location*> *locations);
+    void SaveCaller(Location *location);
+    void RestoreCaller(Location *location);
 };
 
 
 #endif
- 

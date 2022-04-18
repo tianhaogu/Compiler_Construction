@@ -1,3 +1,9 @@
+/* File: scope.h
+ * -------------
+ * The Scope class will be used to manage scopes, sort of
+ * table used to map identifier names to Declaration objects.
+ */
+
 #ifndef _H_scope
 #define _H_scope
 
@@ -5,21 +11,19 @@
 
 class Decl;
 class Identifier;
-class ClassDecl;
+class ClassDecl; 
 
-class Scope
-{
-protected:
-  Hashtable<Decl *> *t;
+class Scope { 
+  protected:
+    Hashtable<Decl*> *table;
 
-public:
-  Scope() { t = new Hashtable<Decl *>; }
-  Decl *Find(Identifier *id);
-  void Remove(Decl *d);
-  bool Declare(Decl *d, Hashtable<const char *> *flag = NULL);
-  void Copy(Scope *s);
-  int NumEntries();
-  Iterator<Decl *> GetIter() { return t->GetIterator(); }
+  public:
+    Scope();
+
+    Decl *Lookup(Identifier *id);
+    bool Declare(Decl *dec);
+    void CopyFromScope(Scope *other, ClassDecl *cd);
 };
+
 
 #endif

@@ -45,6 +45,8 @@ class Location
     int offset;
     Location *reference;
     int refOffset;
+    int spillCost;
+    List<Location*> interferences;
 	  
   public:
     Location(Segment seg, int offset, const char *name);
@@ -58,6 +60,14 @@ class Location
     bool IsReference()              { return reference != NULL; }
     Location *GetReference()        { return reference; }
     int GetRefOffset()              { return refOffset; }
+    void IncrementSpillCost() { ++spillCost; }
+    double GetScore()
+      { return static_cast<double>(spillCost) / interferences.NumElements(); }
+    void AddInterference(Location *loc) {
+	interferences.Remove(loc);
+	interferences.Append(loc);
+    }
+    List<Location*> *GetInterferences() { return &interferences; }
 };
  
 
@@ -68,11 +78,18 @@ class Location
 class Instruction {
     protected:
         char printed[128];
+	      List<Instruction*> successors;
+	      List<Location*> liveVariables;
 	  
     public:
 	virtual void Print();
 	virtual void EmitSpecific(Mips *mips) = 0;
 	virtual void Emit(Mips *mips);
+  void AddSuccessor(Instruction* tac) { successors.Append(tac); }
+  List<Location*> *GetLiveVariables() { return &liveVariables; }
+  bool Analyze();
+  /*Abstract function for all children class. Uncomment and implement for the other children classes*/
+  //virtual void AnalyzeSpecific() = 0;
 };
 
   
@@ -170,6 +187,7 @@ class Label: public Instruction {
     Label(const char *label);
     void Print();
     void EmitSpecific(Mips *mips);
+    const char *GetLabel() { return label; }
 };
 
 class Goto: public Instruction {
@@ -177,6 +195,7 @@ class Goto: public Instruction {
   public:
     Goto(const char *label);
     void EmitSpecific(Mips *mips);
+    const char *GetLabel() { return label; }
 };
 
 class IfZ: public Instruction {
@@ -185,6 +204,7 @@ class IfZ: public Instruction {
   public:
     IfZ(Location *test, const char *label);
     void EmitSpecific(Mips *mips);
+    const char *GetLabel() { return label; }
 };
 
 class BeginFunc: public Instruction {

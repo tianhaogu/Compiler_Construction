@@ -6,9 +6,9 @@
 #include "ast_type.h"
 #include "ast_decl.h"
 #include "ast_expr.h"
-#include "codegen.h"
-#include "errors.h"
 #include "scope.h"
+#include "errors.h"
+#include "codegen.h"
 
 
 Program::Program(List<Decl*> *d) {
@@ -17,10 +17,9 @@ Program::Program(List<Decl*> *d) {
 }
 
 void Program::Check() {
-    /* You can use your pp3 semantic analysis or leave it out if
-     * you want to avoid the clutter.  We won't test pp4 against 
-     * semantically-invalid programs.
-     */
+    nodeScope = new Scope();
+    decls->DeclareAll(nodeScope);
+    decls->CheckAll();
 }
 void Program::Emit() {
     /* pp4: here is where the code generation is kicked off.
@@ -33,7 +32,7 @@ void Program::Emit() {
     bool found = false;
     for (int i = 0; i < decls-> NumElements(); i++) {
         Decl* d = decls-> Nth(i);
-        if (!strcmp(d-> GetName(), "main") && d-> isFunct()) {
+        if (!strcmp(d-> GetName(), "main") && d-> IsFnDecl()) {
             found = true;
             break;
         }
@@ -54,9 +53,17 @@ StmtBlock::StmtBlock(List<VarDecl*> *d, List<Stmt*> *s) {
     (stmts=s)->SetParentAll(this);
 }
 
-void StmtBlock::Emit(CodeGenerator *cg) {
+void StmtBlock::Check() {
+    nodeScope = new Scope();
+    decls->DeclareAll(nodeScope);
+    decls->CheckAll();
+    stmts->CheckAll();
+}
+
+Location *StmtBlock::Emit(CodeGenerator *cg) {
     decls-> EmitAll(cg);
     stmts-> EmitAll(cg);
+    return NULL;
 }
 
 ConditionalStmt::ConditionalStmt(Expr *t, Stmt *b) { 
@@ -65,36 +72,32 @@ ConditionalStmt::ConditionalStmt(Expr *t, Stmt *b) {
     (body=b)->SetParent(this);
 }
 
+void ConditionalStmt::Check() {
+    if (!test->CheckAndComputeResultType()->IsCompatibleWith(Type::boolType))
+	ReportError::TestNotBoolean(test);
+    body->Check();
+}
+
+
 ForStmt::ForStmt(Expr *i, Expr *t, Expr *s, Stmt *b): LoopStmt(t, b) { 
     Assert(i != NULL && t != NULL && s != NULL && b != NULL);
     (init=i)->SetParent(this);
     (step=s)->SetParent(this);
 }
 
-void ForStmt::Emit(CodeGenerator *cg) {
+Location *ForStmt::Emit(CodeGenerator *cg) {
     char *L_Before = cg-> NewLabel();
     char *L_After = cg-> NewLabel();
-    cg-> GenLabel(L_Before);
+    L_End = L_After;
     init-> Emit(cg);
+    cg-> GenLabel(L_Before);
     Location *t = test-> Emit(cg);
     cg-> GenIfZ(t, L_After);
     body-> Emit(cg);
     step-> Emit(cg);
     cg-> GenGoto(L_Before);
     cg-> GenLabel(L_After);
-    L_End = L_After;
-}
-
-void WhileStmt::Emit(CodeGenerator *cg) {
-    char *L_Before = cg-> NewLabel();
-    char *L_After = cg-> NewLabel();
-    cg-> GenLabel(L_Before);
-    Location *t = test-> Emit(cg);
-    cg-> GenIfZ(t, L_After);
-    body-> Emit(cg);
-    cg-> GenGoto(L_Before);
-    cg-> GenLabel(L_After);
-    L_End = L_After;
+    return NULL;
 }
 
 IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb): ConditionalStmt(t, tb) { 
@@ -103,10 +106,17 @@ IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb): ConditionalStmt(t, tb) {
     if (elseBody) elseBody->SetParent(this);
 }
 
-// Not sure here...
-void IfStmt::Emit(CodeGenerator *cg) {
+void IfStmt::Check() {
+    ConditionalStmt::Check();
+    if (elseBody) elseBody->Check();
+}
+
+Location *IfStmt::Emit(CodeGenerator *cg) {
     char *L_AfterIf = cg-> NewLabel();
-    char *L_AfterElse = cg-> NewLabel();
+    char *L_AfterElse;
+    if (elseBody) {
+        L_AfterElse = cg-> NewLabel();
+    }
     Location *t = test-> Emit(cg);
     cg-> GenIfZ(t, L_AfterIf);
     body-> Emit(cg);
@@ -118,9 +128,28 @@ void IfStmt::Emit(CodeGenerator *cg) {
         elseBody-> Emit(cg);
         cg-> GenLabel(L_AfterElse);
     }
+    return NULL;
 }
 
-void BreakStmt::Emit(CodeGenerator *cg) {
+Location *WhileStmt::Emit(CodeGenerator *cg) {
+    char *L_Before = cg-> NewLabel();
+    char *L_After = cg-> NewLabel();
+    L_End = L_After;
+    cg-> GenLabel(L_Before);
+    Location *t = test-> Emit(cg);
+    cg-> GenIfZ(t, L_After);
+    body-> Emit(cg);
+    cg-> GenGoto(L_Before);
+    cg-> GenLabel(L_After);
+    return NULL;
+}
+
+void BreakStmt::Check() {
+    if (!FindSpecificParent<LoopStmt>())
+        ReportError::BreakOutsideLoop(this);
+}
+
+Location *BreakStmt::Emit(CodeGenerator *cg) {
     Node *p = parent;
     while (p) {
         if (dynamic_cast<LoopStmt *>(p)) {
@@ -130,6 +159,7 @@ void BreakStmt::Emit(CodeGenerator *cg) {
     }
     char *endLabel = dynamic_cast<LoopStmt *>(p)-> GetEndLabel();
     cg-> GenGoto(endLabel);
+    return NULL;
 }
 
 ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc) { 
@@ -137,30 +167,48 @@ ReturnStmt::ReturnStmt(yyltype loc, Expr *e) : Stmt(loc) {
     (expr=e)->SetParent(this);
 }
 
-void ReturnStmt::Emit(CodeGenerator *cg) {
+void ReturnStmt::Check() {
+    Type *got = expr->CheckAndComputeResultType();
+    Type *expected =  FindSpecificParent<FnDecl>()->GetReturnType();
+    if (!got->IsCompatibleWith(expected))
+	ReportError::ReturnMismatch(this, got, expected);
+}
+
+Location *ReturnStmt::Emit(CodeGenerator *cg) {
     Location *t = expr-> Emit(cg);
     cg-> GenReturn(t);
+    return NULL;
 }
-  
+
 PrintStmt::PrintStmt(List<Expr*> *a) {    
     Assert(a != NULL);
     (args=a)->SetParentAll(this);
 }
 
-void PrintStmt::Emit(CodeGenerator *cg) {
+void PrintStmt::Check() {
+    for (int i = 0; i < args->NumElements();i++) {
+	Type *t = args->Nth(i)->CheckAndComputeResultType();
+	if (t->IsEquivalentTo(Type::errorType)) continue;
+	if (!(t->IsEquivalentTo(Type::intType) || t->IsEquivalentTo(Type::stringType) || t->IsEquivalentTo(Type::boolType)))
+	  ReportError::PrintArgMismatch(args->Nth(i),i + 1, t);
+    }
+}
+
+Location *PrintStmt::Emit(CodeGenerator *cg) {
     for (int i = 0; i < args-> NumElements(); i++) {
         Expr *currArg = args-> Nth(i);
         Location *t = currArg-> Emit(cg);
         BuiltIn builtIn;
-        if (currArg-> CheckType()-> IsEquivalentTo(Type::intType)) {
+        if (currArg-> CheckAndComputeResultType()-> IsEquivalentTo(Type::intType)) {
             builtIn = BuiltIn::PrintInt;
         }
-        if (currArg-> CheckType()-> IsEquivalentTo(Type::stringType)) {
+        if (currArg-> CheckAndComputeResultType()-> IsEquivalentTo(Type::stringType)) {
             builtIn = BuiltIn::PrintString;
         }
-        if (currArg-> CheckType()-> IsEquivalentTo(Type::boolType)) {
+        if (currArg-> CheckAndComputeResultType()-> IsEquivalentTo(Type::boolType)) {
             builtIn = BuiltIn::PrintBool;
         }
         cg-> GenBuiltInCall(builtIn, t, NULL);
     }
+    return NULL;
 }

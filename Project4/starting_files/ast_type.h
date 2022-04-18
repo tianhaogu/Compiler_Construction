@@ -4,9 +4,6 @@
  * store type information. The base Type class is used
  * for built-in types, the NamedType for classes and interfaces,
  * and the ArrayType for arrays of other types.  
- *
- * pp4: You will need to extend the Type classes to implement
- * code generation for types.
  */
  
 #ifndef _H_ast_type
@@ -14,10 +11,12 @@
 
 #include "ast.h"
 #include "list.h"
+#include "tac.h"
 #include <iostream>
 
 
-class Type : public Node {
+class Type : public Node 
+{
   protected:
     char *typeName;
 
@@ -31,25 +30,42 @@ class Type : public Node {
     virtual void PrintToStream(std::ostream& out) { out << typeName; }
     friend std::ostream& operator<<(std::ostream& out, Type *t) { t->PrintToStream(out); return out; }
     virtual bool IsEquivalentTo(Type *other) { return this == other; }
-    virtual const char *GetTypeName() { return typeName; }
+    virtual bool IsArrayType() { return false; }
+    virtual bool IsNamedType() { return false; }
+    virtual bool IsCompatibleWith(Type *other);
+    virtual bool IsNumeric() { return this == Type::intType || this == Type::doubleType; }
+    virtual bool IsError() { return false;}
+    virtual Type *LesserType(Type *other);
+	 
+    Location *Emit(CodeGenerator *cg) { return NULL; }  
 };
 
-class NamedType : public Type {
+class NamedType : public Type 
+{
   protected:
     Identifier *id;
-    Decl *d;
+    Decl *cachedDecl; // either class or inteface
+    bool isError;
     
   public:
     NamedType(Identifier *i);
     
-    const char *GetTypeName() { return id->GetName(); }
     void PrintToStream(std::ostream& out) { out << id; }
-    Decl *getDecl() { return d; }
-    Identifier *getID() { return id; }
+    void Check();
+    Decl *GetDeclForType();
+    void SetDeclForType(Decl *decl);
+    bool IsInterface();
+    bool IsClass();
+    Identifier *GetId() { return id; }
+    bool IsEquivalentTo(Type *other);
+    bool IsNamedType() { return true; }
+    bool IsCompatibleWith(Type *other);
+    bool IsError() { return isError;}
     const char *GetTypeName() { return id->GetName(); }
 };
 
-class ArrayType : public Type {
+class ArrayType : public Type 
+{
   protected:
     Type *elemType;
 
@@ -57,7 +73,11 @@ class ArrayType : public Type {
     ArrayType(yyltype loc, Type *elemType);
     
     void PrintToStream(std::ostream& out) { out << elemType << "[]"; }
-    Type *getElementType() { return elemType; }
+    void Check();
+    bool IsEquivalentTo(Type *other);
+    bool IsArrayType() { return true; }
+    bool IsError() { return elemType->IsError(); }
+    Type *GetArrayElemType() { return elemType; }
 };
 
  

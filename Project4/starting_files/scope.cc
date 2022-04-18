@@ -1,70 +1,53 @@
+/* File: scope.cc
+ * --------------     
+ * Each Scope object tracks its own hashtable and 
+ * may have additional information about the particulars for this 
+ * scope (class, fn, global, etc.)
+ */
+
 #include "scope.h"
-#include "list.h"
-#include "ast.h"
 #include "ast_decl.h"
-#include "errors.h"
 
-Decl *Scope::Find(Identifier *id)
+
+Scope::Scope()
 {
-    return t->Lookup(id->GetName());
+    table = new Hashtable<Decl*>;
 }
 
-void Scope::Remove(Decl *d)
+
+/* Method: Lookup
+ * --------------
+ * Looks for an identifier in this scope only. Returns NULL if
+ * not found.
+ */
+Decl *Scope::Lookup(Identifier *id)       
 {
-    t->Remove(d->GetName(), t->Lookup(d->GetName()));
+    return table->Lookup(id->GetName());
 }
 
-bool Scope::Declare(Decl *d, Hashtable<const char *> *flag)
+
+/* Method: Declare
+ * ---------------
+ * Adds an identifier to this scope and sets scope on declaration.
+ * Prints error if declaration/definition conflicts with use of identifier
+ * in this scope and returns false. If successful, returns true.
+ */
+bool Scope::Declare(Decl *decl)
 {
-    Decl *d_old = t->Lookup(d->GetName());
-    if (d_old)
-    {
-        if ((dynamic_cast<ClassDecl *>(d->GetParent()) != NULL ||
-             dynamic_cast<InterfaceDecl *>(d->GetParent()) != NULL) &&
-            (dynamic_cast<ClassDecl *>(d_old->GetParent()) != NULL ||
-             dynamic_cast<InterfaceDecl *>(d_old->GetParent()) != NULL) &&
-            (d->GetParent() != d_old->GetParent() || (flag && flag->Lookup(d->GetName()))) &&
-            dynamic_cast<FnDecl *>(d) &&
-            dynamic_cast<FnDecl *>(d_old))
-        {
-            FnDecl *fn = dynamic_cast<FnDecl *>(d);
-            FnDecl *fn_old = dynamic_cast<FnDecl *>(d_old);
-            if (fn->IsEquivalentTo(fn_old))
-            {
-                if (flag)
-                {
-                    flag->Remove(d->GetName(), d->GetName());
-                    t->Remove(d->GetName(), t->Lookup(d->GetName()));
-                }
-                t->Enter(d->GetName(), d);
-                return true;
-            }
-            else
-            {
-                ReportError::OverrideMismatch(fn);
-                return false;
-            }
-        }
-        else
-        {
-            ReportError::DeclConflict(d, d_old);
-            return false;
-        }
+  Decl *prev = table->Lookup(decl->GetName());
+  PrintDebug("scope", "Line %d declaring %s (prev? %p)\n", decl->GetLocation()->first_line, decl->GetName(), prev);
+  if (prev && decl->ConflictsWithPrevious(prev)) // throw away second, keep first
+      return false;
+  table->Enter(decl->GetName(), decl);
+  return true;
+}
+
+void Scope::CopyFromScope(Scope *other, ClassDecl *addTo)
+{
+    Iterator<Decl*> iter = other->table->GetIterator();
+    Decl *decl;
+    while ((decl = iter.GetNextValue()) != NULL) {
+        table->Enter(decl->GetName(), decl);
+	  if (addTo) addTo->AddField(decl);
     }
-    t->Enter(d->GetName(), d);
-    return true;
-}
-
-void Scope::Copy(Scope *s)
-{
-    Iterator<Decl *> i = s->t->GetIterator();
-    for (Decl *d = i.GetNextValue(); d != NULL; d = i.GetNextValue())
-    {
-        t->Enter(d->GetName(), d);
-    }
-}
-
-int Scope::NumEntries()
-{
-    return t->NumEntries();
 }

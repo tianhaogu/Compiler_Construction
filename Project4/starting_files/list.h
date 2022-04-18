@@ -29,9 +29,12 @@
 #define _H_list
 
 #include <deque>
+#include <algorithm>
 #include "utility.h"  // for Assert()
+#include "scope.h"
   
 class Node;
+class CodeGenerator;
 
 template<class Element> class List {
 
@@ -41,6 +44,11 @@ template<class Element> class List {
  public:
            // Create a new empty list
     List() {}
+           // Copy a list
+    List(const List<Element> &lst) : elems(lst.elems) {}
+
+           // Clear the list
+    void Clear() { elems.clear(); }
 
            // Returns count of elements currently in list
     int NumElements() const
@@ -62,11 +70,25 @@ template<class Element> class List {
     void Append(const Element &elem)
 	{ elems.push_back(elem); }
 
+	  // Adds all elements to list end
+    void AppendAll(const List<Element> &lst)
+        { for (int i = 0; i < lst.NumElements(); i++)
+             Append(lst.Nth(i)); }
+
          // Removes element at index, shuffling down others
          // Raises assert if index out of range
     void RemoveAt(int index)
 	{ Assert(index >= 0 && index < NumElements());
 	  elems.erase(elems.begin() + index); }
+
+	 // Removes all elements of a specific value
+    void Remove(const Element &elem)
+        { elems.erase(std::remove(elems.begin(), elems.end(), elem), elems.end()); }
+
+	 // Sort and remove repeated elements
+    void Unique()
+        { std::sort(elems.begin(), elems.end());
+	  elems.erase(std::unique(elems.begin(), elems.end()), elems.end()); }
           
        // These are some specific methods useful for lists of ast nodes
        // They will only work on lists of elements that respond to the
@@ -76,12 +98,15 @@ template<class Element> class List {
     void SetParentAll(Node *p)
         { for (int i = 0; i < NumElements(); i++)
              Nth(i)->SetParent(p); }
-    
-    void EmitAll(CodeGenerator *cg) {
-        for (int i = 0; i < NumElements(); i++) {
-            Nth(i)-> Emit(cg);
-        }
-    }
+    void EmitAll(CodeGenerator *cg)
+        { for (int i = 0; i < NumElements(); i++)
+             Nth(i)->Emit(cg); }
+    void CheckAll()
+            { for (int i = 0; i < NumElements(); i++)
+                Nth(i)->Check(); }
+    void DeclareAll(Scope *s)
+        { for (int i = 0; i < NumElements(); i++)
+             s->Declare(Nth(i)); }
 
 };
 

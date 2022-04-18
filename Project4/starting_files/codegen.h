@@ -12,8 +12,7 @@
 #include <stdlib.h>
 #include "list.h"
 #include "tac.h"
-class FnDecl;
- 
+class FnDecl; 
 
               // These codes are used to identify the built-in functions
 typedef enum { Alloc, ReadLine, ReadInteger, StringEqual,
@@ -50,6 +49,7 @@ class CodeGenerator {
          // Creates and returns a Location for a new uniquely named
          // temp variable. Does not generate any Tac instructions
     Location *GenTempVar();
+
 
     Location *GenLocalVariable(const char *varName);
     Location *GenGlobalVariable(const char *varName);

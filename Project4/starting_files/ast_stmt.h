@@ -4,9 +4,6 @@
  * statements in the parse tree.  For each statment in the
  * language (for, if, return, etc.) there is a corresponding
  * node class for that construct. 
- *
- * pp4: You will need to extend the Stmt classes to implement
- * code generation for statements.
  */
 
 
@@ -14,14 +11,15 @@
 #define _H_ast_stmt
 
 #include "list.h"
+#include "tac.h"
 #include "ast.h"
-#include "codegen.h"
 
 class Decl;
 class VarDecl;
 class Expr;
   
-class Program : public Node {
+class Program : public Node
+{
   protected:
     List<Decl*> *decls;
      
@@ -31,35 +29,40 @@ class Program : public Node {
     void Emit();
 };
 
-class Stmt : public Node {
+class Stmt : public Node
+{
   public:
     Stmt() : Node() {}
     Stmt(yyltype loc) : Node(loc) {}
-    virtual void Emit(CodeGenerator *cg) = 0;
-    virtual int GetFrameSize() { return 0; }
+    virtual Location *Emit(CodeGenerator *cg) { return NULL; }
 };
 
-class StmtBlock : public Stmt {
+class StmtBlock : public Stmt 
+{
   protected:
     List<VarDecl*> *decls;
     List<Stmt*> *stmts;
     
   public:
     StmtBlock(List<VarDecl*> *variableDeclarations, List<Stmt*> *statements);
-    void Emit(CodeGenerator *cg);
+    void Check();
+    Location *Emit(CodeGenerator *cg);
 };
 
   
-class ConditionalStmt : public Stmt {
+class ConditionalStmt : public Stmt
+{
   protected:
     Expr *test;
     Stmt *body;
   
   public:
     ConditionalStmt(Expr *testExpr, Stmt *body);
+    void Check();
 };
 
-class LoopStmt : public ConditionalStmt {
+class LoopStmt : public ConditionalStmt 
+{ 
   protected:
     char *L_End = NULL;
 
@@ -69,52 +72,62 @@ class LoopStmt : public ConditionalStmt {
     char* GetEndLabel() { return L_End; }
 };
 
-class ForStmt : public LoopStmt {
+class ForStmt : public LoopStmt 
+{
   protected:
     Expr *init, *step;
   
   public:
     ForStmt(Expr *init, Expr *test, Expr *step, Stmt *body);
-    void Emit(CodeGenerator *cg);
+    Location *Emit(CodeGenerator *cg);
 };
 
-class WhileStmt : public LoopStmt {
+class WhileStmt : public LoopStmt 
+{
   public:
     WhileStmt(Expr *test, Stmt *body) : LoopStmt(test, body) {}
-    void Emit(CodeGenerator *cg);
+    Location *Emit(CodeGenerator *cg);
 };
 
-class IfStmt : public ConditionalStmt {
+class IfStmt : public ConditionalStmt 
+{
   protected:
     Stmt *elseBody;
   
   public:
     IfStmt(Expr *test, Stmt *thenBody, Stmt *elseBody);
-    void Emit(CodeGenerator *cg);
+    void Check();
+    Location *Emit(CodeGenerator *cg);
 };
 
-class BreakStmt : public Stmt {
+class BreakStmt : public Stmt 
+{
   public:
     BreakStmt(yyltype loc) : Stmt(loc) {}
-    void Emit(CodeGenerator *cg);
+    void Check();
+    Location *Emit(CodeGenerator *cg);
 };
 
-class ReturnStmt : public Stmt {
+class ReturnStmt : public Stmt  
+{
   protected:
     Expr *expr;
   
   public:
     ReturnStmt(yyltype loc, Expr *expr);
-    void Emit(CodeGenerator *cg);
+    void Check();
+    Location *Emit(CodeGenerator *cg);
 };
 
-class PrintStmt : public Stmt {
+class PrintStmt : public Stmt
+{
   protected:
     List<Expr*> *args;
     
   public:
     PrintStmt(List<Expr*> *arguments);
-    void Emit(CodeGenerator *cg);
+    void Check();
+    Location *Emit(CodeGenerator *cg);
 };
 
 

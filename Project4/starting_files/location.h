@@ -24,6 +24,14 @@ typedef struct yyltype
 
 #define YYLTYPE yyltype
 
+inline bool operator< (const yyltype &pos1, const yyltype &pos2) {
+    int diff;
+    if ((diff = pos1.first_line - pos2.first_line)) return diff < 0;
+    if ((diff = pos1.first_column - pos2.first_column)) return diff < 0;
+    if ((diff = pos1.last_line - pos2.last_line)) return diff < 0;
+    if ((diff = pos1.last_column - pos2.last_column)) return diff < 0;
+    return false;
+}
 
 /* Global variable: yylloc
  * ------------------------

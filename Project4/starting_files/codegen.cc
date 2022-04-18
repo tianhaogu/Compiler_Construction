@@ -36,7 +36,7 @@ Location *CodeGenerator::GenTempVar()
   return GenLocalVariable(temp);
 }
 
-  
+
 Location *CodeGenerator::GenLocalVariable(const char *varName)
 {            
     curStackOffset -= VarSize;
@@ -48,7 +48,7 @@ Location *CodeGenerator::GenGlobalVariable(const char *varName)
     curGlobalOffset += VarSize;
     return new Location(gpRelative, curGlobalOffset -4, varName);
 }
-
+ 
 
 Location *CodeGenerator::GenLoadConstant(int value)
 {
@@ -159,7 +159,7 @@ Location *CodeGenerator::GenLCall(const char *label, bool fnHasReturnValue)
   code->Append(new LCall(label, result));
   return result;
 }
-  
+
 Location *CodeGenerator::GenFunctionCall(const char *fnLabel, List<Location*> *args, bool hasReturnValue)
 {
   for (int i = args->NumElements()-1; i >= 0; i--) // push params right to left
@@ -175,7 +175,7 @@ Location *CodeGenerator::GenACall(Location *fnAddr, bool fnHasReturnValue)
   code->Append(new ACall(fnAddr, result));
   return result;
 }
-  
+ 
 Location *CodeGenerator::GenMethodCall(Location *rcvr,
 			     Location *meth, List<Location*> *args, bool fnHasReturnValue)
 {
@@ -186,8 +186,8 @@ Location *CodeGenerator::GenMethodCall(Location *rcvr,
   GenPopParams((args->NumElements()+1)*VarSize);
   return result;
 }
- 
- 
+
+
 static struct _builtin {
   const char *label;
   int numArgs;

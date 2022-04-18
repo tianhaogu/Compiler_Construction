@@ -4,9 +4,6 @@
  * manage declarations. There are 4 subclasses of the base class,
  * specialized for declarations of variables, functions, classes,
  * and interfaces.
- *
- * pp4: You will need to extend the Decl classes to implement 
- * code generation for declarations.
  */
 
 #ifndef _H_ast_decl
@@ -16,92 +13,121 @@
 #include "ast_type.h"
 #include "list.h"
 
+
+
 class Identifier;
 class Stmt;
+class FnDecl;
+class InterfaceDecl;
+#include "ast_stmt.h"
+class Location;
 
-class Decl : public Node {
+class Decl : public Node 
+{
   protected:
     Identifier *id;
-    int offset;
   
   public:
     Decl(Identifier *name);
     friend std::ostream& operator<<(std::ostream& out, Decl *d) { return out << d->id; }
-    const char *GetName() { return id-> GetName(); }
-    Identifier *GetID() { return id; }
+    Identifier *GetId() { return id; }
+    const char *GetName() { return id->GetName(); }
+    
+    virtual bool ConflictsWithPrevious(Decl *prev);
 
-    virtual bool isClass() { return false; }
-    virtual bool isInter() { return false; }
-    virtual bool isFunct() { return false; }
-    virtual Location *Emit(CodeGenerator *cg) { return NULL; }
+    virtual bool IsVarDecl() { return false; } // jdz: could use typeid/dynamic_cast for these
+    virtual bool IsClassDecl() { return false; }
+    virtual bool IsInterfaceDecl() { return false; }
+    virtual bool IsFnDecl() { return false; } 
+    virtual bool IsMethodDecl() { return false; }
+    virtual bool IsIvarDecl() { return false; }
+  int offset;// used for methods and ivars only
     void SetOffset(int off) { offset = off; }
     int GetOffset() { return offset; }
+    virtual Location *Emit(CodeGenerator *cg) { return NULL; }
 };
 
-class VarDecl : public Decl {
+class VarDecl : public Decl 
+{
   protected:
     Type *type;
-    Location *loc = NULL;
-    Location *rtLoc;
     
   public:
     VarDecl(Identifier *name, Type *type);
-
-    void SetLocation(Location *l) { loc = l; }
-    Location *GetLocation() { return loc; }
-    Type *GetType() { return type; }
-    bool InClass() { return dynamic_cast<ClassDecl *>(parent); }
+    void Check();
+    Type *GetDeclaredType() { return type; }
+    bool IsVarDecl() { return true; }
+    bool IsIvarDecl();
+    Location *rtLoc;
+    virtual bool IsReference() { return false; }
     Location *Emit(CodeGenerator *cg);
 };
 
-class ClassDecl : public Decl {
+class ClassDecl : public Decl 
+{
   protected:
     List<Decl*> *members;
     NamedType *extends;
     List<NamedType*> *implements;
-    List<const char*> *methodLabels;
-    int lastVarOffset = CodeGenerator::OffsetToFirstLocal + 4;
-    int lastMethodOffset = 0;
+    NamedType *cType;
+    List<InterfaceDecl*> *convImp;
+    List<const char*> *vtable;
+    int nextIvarOffset;
 
   public:
     ClassDecl(Identifier *name, NamedType *extends, 
               List<NamedType*> *implements, List<Decl*> *members);
-    
-    void BuildClass();
+    void Check();
+    bool IsClassDecl() { return true; }
+    Scope *PrepareScope();
+    List<InterfaceDecl*> *GetImplementedInterfaces() { return convImp; }
+    bool IsCompatibleWith(Type *type);
+    bool Implements(Type *intf);
+    Type *GetDeclaredType() { return cType; } //  used by "this"
+    const char *GetClassName() { return id->GetName(); }
+    void AddMethod(FnDecl*d, Decl *p);
+    void AddIvar(VarDecl*d, Decl *p);
+    void AddField(Decl*d);
+    int GetClassSize() { return nextIvarOffset; }
     Location *Emit(CodeGenerator *cg);
-    bool isClass() { return true; }
 };
 
-class InterfaceDecl : public Decl {
+class InterfaceDecl : public Decl 
+{
   protected:
     List<Decl*> *members;
     
   public:
     InterfaceDecl(Identifier *name, List<Decl*> *members);
-
-    bool isInter() { return true; }
+    void Check();
+    bool IsInterfaceDecl() { return true; }
+    Scope *PrepareScope();
+    bool ClassMeetsObligation(Scope *s);
 };
 
-class FnDecl : public Decl {
+class FnDecl : public Decl 
+{
   protected:
     List<VarDecl*> *formals;
     Type *returnType;
     Stmt *body;
     std::string label;
     Location *loc;
-    int offset_local = CodeGenerator::OffsetToFirstLocal;
     
   public:
     FnDecl(Identifier *name, Type *returnType, List<VarDecl*> *formals);
-    List<VarDecl*> *GetFormals() { return formals; }
     void SetFunctionBody(Stmt *b);
-
-    bool isFunct() { return true; }
+    void Check();
+    bool IsFnDecl() { return true; }
     bool IsMethodDecl();
     void SetLabel(const std::string &s) { label = s; }
     const char *GetLabel() { return label.c_str(); }
+    bool ConflictsWithPrevious(Decl *prev);
+    bool MatchesPrototype(FnDecl *other);
+    Type *GetReturnType() {return returnType; }
     Type *GetType() { return returnType; }
-    int GetLocalOffset() { return offset_local; }
+    List<VarDecl*> *GetFormals() { return formals; }
+    const char *GetFunctionLabel();
     Location *Emit(CodeGenerator *cg);
 };
 
