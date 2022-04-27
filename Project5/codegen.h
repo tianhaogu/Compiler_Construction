@@ -11,6 +11,8 @@
 
 #include <stdlib.h>
 #include <utility>
+#include <set>
+#include <map>
 #include "list.h"
 #include "hashtable.h"
 #include "tac.h"
@@ -180,7 +182,7 @@ class CodeGenerator {
     void GenHaltWithMessage(const char *msg);
     void ConstructCFG();
     void VarLiveAnalysis();
-    void ConstructInterferenceGraph();
+    void ConstructRIG();
     void ColorGraph();
     void LivenessAnalysis();
 };

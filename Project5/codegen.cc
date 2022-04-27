@@ -350,7 +350,7 @@ void CodeGenerator::VarLiveAnalysis() {
                     curr_tac-> intemp_set.erase(kill_item);
                 }
                 curr_tac-> intemp_set.insert(curr_tac-> gen_set.begin(), curr_tac-> gen_set.end());
-                // if IN'[TAC] ≠ IN[TAC]
+                // if IN'[TAC] != IN[TAC]
                 if (curr_tac-> intemp_set != curr_tac-> in_set) {
                     curr_tac-> in_set = curr_tac-> intemp_set;
                     changed = true;
@@ -360,8 +360,24 @@ void CodeGenerator::VarLiveAnalysis() {
     }
 }
 
-void CodeGenerator::ConstructInterferenceGraph() {
-    return;
+void CodeGenerator::ConstructRIG() {
+    for (int p = 0; p < function_positions-> NumElements(); p++) {
+        BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));
+        for (int i = function_positions-> Nth(p).first; i <= function_positions-> Nth(p).second; i++) {
+            Instruction *curr_tac = code-> Nth(i);
+            for (auto in_item_src : curr_tac-> in_set) {
+                if (bgfn-> inter_graph.find(in_item_src) == bgfn-> inter_graph.end()) {
+                    bgfn-> inter_graph[in_item_src] = {};
+                }
+                for (auto in_item_dst : curr_tac-> in_set) {
+                    if (in_item_src != in_item_dst) {
+                        bgfn-> inter_graph[in_item_src].insert(in_item_dst);
+                    }
+                }
+            }
+            // Do the same thing for the union of out_set and kill_set, but don't know why ???
+        }
+    }
 }
 
 void CodeGenerator::ColorGraph() {
@@ -372,6 +388,6 @@ void CodeGenerator::ColorGraph() {
 void CodeGenerator::LivenessAnalysis() {
     this-> ConstructCFG();
     this-> VarLiveAnalysis();
-    this-> ConstructInterferenceGraph();
+    this-> ConstructRIG();
     this-> ColorGraph();
 }

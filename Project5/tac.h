@@ -25,6 +25,7 @@
 
 #include "list.h" // for VTable
 #include <set>
+#include <map>
 class Mips;
 
 
@@ -37,6 +38,7 @@ class Mips;
     // with name "num", segment fpRelative, and offset -8. 
  
 typedef enum {fpRelative, gpRelative} Segment;
+typedef std::map<Instruction*, std::set<Instruction*> > INTERFERENCEGRAPH;
 
 class Location
 {
@@ -221,6 +223,7 @@ class BeginFunc: public Instruction {
     // used to backpatch the instruction with frame size once known
     void SetFrameSize(int numBytesForAllLocalsAndTemps);
     void EmitSpecific(Mips *mips);
+    INTERFERENCEGRAPH inter_graph;
 };
 
 class EndFunc: public Instruction {
