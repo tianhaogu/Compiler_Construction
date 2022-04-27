@@ -111,13 +111,13 @@ void IfStmt::Emit(CodeGenerator *cg) {
     cg->GenIfZ(test->result, elseL);
     body->Emit(cg);
     if (elseBody) {
-	afterElse = cg->NewLabel();
-	cg->GenGoto(afterElse);
+	    afterElse = cg->NewLabel();
+	    cg->GenGoto(afterElse);
     }
     cg->GenLabel(elseL);
     if (elseBody) {
-	elseBody->Emit(cg);
-	cg->GenLabel(afterElse);
+	    elseBody->Emit(cg);
+	    cg->GenLabel(afterElse);
     }
 }
 

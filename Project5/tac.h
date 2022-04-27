@@ -24,6 +24,7 @@
 #define _H_tac
 
 #include "list.h" // for VTable
+#include <set>
 class Mips;
 
 
@@ -61,11 +62,10 @@ class Location
     Location *GetReference()        { return reference; }
     int GetRefOffset()              { return refOffset; }
     void IncrementSpillCost() { ++spillCost; }
-    double GetScore()
-      { return static_cast<double>(spillCost) / interferences.NumElements(); }
+    double GetScore() { return static_cast<double>(spillCost) / interferences.NumElements(); }
     void AddInterference(Location *loc) {
-	interferences.Remove(loc);
-	interferences.Append(loc);
+	    interferences.Remove(loc);
+	    interferences.Append(loc);
     }
     List<Location*> *GetInterferences() { return &interferences; }
 };
@@ -76,20 +76,26 @@ class Location
   // has the interface for the 2 polymorphic messages: Print & Emit
   
 class Instruction {
-    protected:
-        char printed[128];
-	      List<Instruction*> successors;
-	      List<Location*> liveVariables;
+  protected:
+    char printed[128];
 	  
-    public:
+  public:
 	virtual void Print();
 	virtual void EmitSpecific(Mips *mips) = 0;
 	virtual void Emit(Mips *mips);
-  void AddSuccessor(Instruction* tac) { successors.Append(tac); }
-  List<Location*> *GetLiveVariables() { return &liveVariables; }
-  bool Analyze();
-  /*Abstract function for all children class. Uncomment and implement for the other children classes*/
-  //virtual void AnalyzeSpecific() = 0;
+    void AddSuccessor(Instruction* tac) { successors.Append(tac); }
+    List<Location*> *GetLiveVariables() { return &liveVariables; }
+    List<Instruction*> successors;  // can be changed to std::list due to the new operation in constructor of children classes ???
+	List<Location*> liveVariables;
+    // type of elements need to be Location* ???
+    std::set<Instruction*> in_set;
+    std::set<Instruction*> intemp_set;
+    std::set<Instruction*> out_set;
+    std::set<Instruction*> kill_set;
+    std::set<Instruction*> gen_set;
+    bool Analyze();
+    /*Abstract function for all children class. Uncomment and implement for the other children classes*/
+    //virtual void AnalyzeSpecific() = 0;
 };
 
   
@@ -97,24 +103,24 @@ class Instruction {
   // for convenience, the instruction classes are listed here.
   // the interfaces for the classes follows below
   
-  class LoadConstant;
-  class LoadStringConstant;
-  class LoadLabel;
-  class Assign;
-  class Load;
-  class Store;
-  class BinaryOp;
-  class Label;
-  class Goto;
-  class IfZ;
-  class BeginFunc;
-  class EndFunc;
-  class Return;
-  class PushParam;
-  class RemoveParams;
-  class LCall;
-  class ACall;
-  class VTable;
+class LoadConstant;
+class LoadStringConstant;
+class LoadLabel;
+class Assign;
+class Load;
+class Store;
+class BinaryOp;
+class Label;
+class Goto;
+class IfZ;
+class BeginFunc;
+class EndFunc;
+class Return;
+class PushParam;
+class RemoveParams;
+class LCall;
+class ACall;
+class VTable;
 
 
 
@@ -167,7 +173,6 @@ class Store: public Instruction {
 };
 
 class BinaryOp: public Instruction {
-
   public:
     typedef enum {Add, Sub, Mul, Div, Mod, Eq, Less, And, Or, NumOps} OpCode;
     static const char * const opName[NumOps];
@@ -261,7 +266,7 @@ class ACall: public Instruction {
 class VTable: public Instruction {
     List<const char *> *methodLabels;
     const char *label;
- public:
+  public:
     VTable(const char *labelForTable, List<const char *> *methodLabels);
     void Print();
     void EmitSpecific(Mips *mips);
