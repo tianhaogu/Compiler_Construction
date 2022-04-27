@@ -85,6 +85,8 @@ class Instruction {
 	virtual void Emit(Mips *mips);
     void AddSuccessor(Instruction* tac) { successors.Append(tac); }
     List<Location*> *GetLiveVariables() { return &liveVariables; }
+    void SetGen();  // needs to be implemented
+    void SetKill();  // needs to be implemented
     List<Instruction*> successors;  // can be changed to std::list due to the new operation in constructor of children classes ???
 	List<Location*> liveVariables;
     // type of elements need to be Location* ???

@@ -343,7 +343,14 @@ void CodeGenerator::VarLiveAnalysis() {
                     curr_tac-> out_set.insert(curr_tac-> successors.Nth(j)-> in_set.begin(), curr_tac-> successors.Nth(j)-> in_set.end());
                 }
                 // IN'[TAC] = OUT[TAC] - KILL(TAC) + GEN(TAC)
-                /* Generate kill_set and gen_set for each tac, can be member variables of the codegenerator class, use index to subscript. */
+                curr_tac-> SetGen();
+                curr_tac-> SetKill();
+                curr_tac-> intemp_set = curr_tac-> out_set;
+                for (auto kill_item : curr_tac-> kill_set) {
+                    curr_tac-> intemp_set.erase(kill_item);
+                }
+                curr_tac-> intemp_set.insert(curr_tac-> gen_set.begin(), curr_tac-> gen_set.end());
+                // if IN'[TAC] ≠ IN[TAC]
                 if (curr_tac-> intemp_set != curr_tac-> in_set) {
                     curr_tac-> in_set = curr_tac-> intemp_set;
                     changed = true;
