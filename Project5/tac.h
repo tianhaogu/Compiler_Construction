@@ -202,7 +202,7 @@ class BinaryOp: public Instruction {
     BinaryOp(OpCode c, Location *dst, Location *op1, Location *op2);
     void EmitSpecific(Mips *mips);
     void SetKill() { kill_set.insert(dst); }
-    void SetGen() { kill_set.insert(op1); kill_set.insert(op2); }
+    void SetGen() { gen_set.insert(op1); gen_set.insert(op2); }
 };
 
 class Label: public Instruction {
