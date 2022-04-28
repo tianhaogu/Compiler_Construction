@@ -372,16 +372,30 @@ void CodeGenerator::ConstructRIG() {
                 for (auto in_item_dst : curr_tac-> in_set) {
                     if (in_item_src != in_item_dst) {
                         bgfn-> inter_graph[in_item_src].insert(in_item_dst);
+                        in_item_src-> AddInterference(in_item_dst);  // use the provided method again
                     }
                 }
             }
             // Do the same thing for the union of out_set and kill_set, but don't know why ???
+            // for (auto kill_item : curr_tac-> kill_set) {
+            //     if (bgfn-> inter_graph.find(kill_item) == bgfn-> inter_graph.end()) {
+            //         bgfn-> inter_graph[kill_item] = {};
+            //     }
+            //     for (auto out_item : curr_tac-> out_set) {
+            //         if (kill_item != out_item) {
+            //             bgfn-> inter_graph[out_item].insert(kill_item);
+            //             bgfn-> inter_graph[kill_item].insert(out_item);
+            //             out_item-> AddInterference(kill_item);  // use the provided method again
+            //             kill_item-> AddInterference(out_item);  // use the provided method again
+            //         }
+            //     }
+            // }
         }
     }
 }
 
 void CodeGenerator::ColorGraph() {
-    int k = 10000;  // try
+    int k = 10000;  // Mips::Register::NumRegs;  // try
     for (int p = 0; p < function_positions-> NumElements(); p++) {
         std::stack<Location*> nodes_removed;
         BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));

@@ -26,6 +26,7 @@
 #include "list.h" // for VTable
 #include <set>
 #include <map>
+#include "mips.h"
 class Mips;
 
 
@@ -50,6 +51,7 @@ class Location
     int refOffset;
     int spillCost;
     List<Location*> interferences;
+    // Mips::Register regst;
 	  
   public:
     Location(Segment seg, int offset, const char *name);
@@ -70,6 +72,8 @@ class Location
 	    interferences.Append(loc);
     }
     List<Location*> *GetInterferences() { return &interferences; }
+    // void SetRegister(Mips::Register reg) { regst = reg; }
+    // Mips::Register GetRegister() { return regst; }
 };
  
 
@@ -87,8 +91,8 @@ class Instruction {
 	virtual void Emit(Mips *mips);
     void AddSuccessor(Instruction* tac) { successors.Append(tac); }
     List<Location*> *GetLiveVariables() { return &liveVariables; }
-    void SetGen();  // needs to be implemented
-    void SetKill();  // needs to be implemented
+    virtual void SetKill() { return; }
+    virtual void SetGen() { return; }
     List<Instruction*> successors;  // can be changed to std::list due to the new operation in constructor of children classes ???
 	List<Location*> liveVariables;
     // type of elements need to be Location* ???
@@ -135,6 +139,7 @@ class LoadConstant: public Instruction {
   public:
     LoadConstant(Location *dst, int val);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
 };
 
 class LoadStringConstant: public Instruction {
@@ -143,6 +148,7 @@ class LoadStringConstant: public Instruction {
   public:
     LoadStringConstant(Location *dst, const char *s);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
 };
     
 class LoadLabel: public Instruction {
@@ -151,6 +157,7 @@ class LoadLabel: public Instruction {
   public:
     LoadLabel(Location *dst, const char *label);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
 };
 
 class Assign: public Instruction {
@@ -158,6 +165,8 @@ class Assign: public Instruction {
   public:
     Assign(Location *dst, Location *src);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
+    void SetGen() { gen_set.insert(src); }
 };
 
 class Load: public Instruction {
@@ -166,6 +175,8 @@ class Load: public Instruction {
   public:
     Load(Location *dst, Location *src, int offset = 0);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
+    void SetGen() { gen_set.insert(src); }
 };
 
 class Store: public Instruction {
@@ -174,6 +185,8 @@ class Store: public Instruction {
   public:
     Store(Location *d, Location *s, int offset = 0);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
+    void SetGen() { gen_set.insert(src); }
 };
 
 class BinaryOp: public Instruction {
@@ -188,6 +201,8 @@ class BinaryOp: public Instruction {
   public:
     BinaryOp(OpCode c, Location *dst, Location *op1, Location *op2);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
+    void SetGen() { kill_set.insert(op1); kill_set.insert(op2); }
 };
 
 class Label: public Instruction {
@@ -214,6 +229,7 @@ class IfZ: public Instruction {
     IfZ(Location *test, const char *label);
     void EmitSpecific(Mips *mips);
     const char *GetLabel() { return label; }
+    void SetGen() { gen_set.insert(test); }
 };
 
 class BeginFunc: public Instruction {
@@ -237,6 +253,7 @@ class Return: public Instruction {
   public:
     Return(Location *val);
     void EmitSpecific(Mips *mips);
+    void SetGen() { gen_set.insert(val); }
 };   
 
 class PushParam: public Instruction {
@@ -244,6 +261,7 @@ class PushParam: public Instruction {
   public:
     PushParam(Location *param);
     void EmitSpecific(Mips *mips);
+    void SetGen() { gen_set.insert(param); }
 }; 
 
 class PopParams: public Instruction {
@@ -259,6 +277,7 @@ class LCall: public Instruction {
   public:
     LCall(const char *labe, Location *result);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
 };
 
 class ACall: public Instruction {
@@ -266,6 +285,7 @@ class ACall: public Instruction {
   public:
     ACall(Location *meth, Location *result);
     void EmitSpecific(Mips *mips);
+    void SetKill() { kill_set.insert(dst); }
 };
 
 class VTable: public Instruction {
