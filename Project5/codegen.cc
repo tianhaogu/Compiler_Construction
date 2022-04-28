@@ -381,7 +381,37 @@ void CodeGenerator::ConstructRIG() {
 }
 
 void CodeGenerator::ColorGraph() {
-    return;
+    int k = 10000;  // try
+    for (int p = 0; p < function_positions-> NumElements(); p++) {
+        std::stack<Location*> nodes_removed;
+        BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));
+        // 1. Remove the nodes
+        while (bgfn-> inter_graph.size() > 0) {
+            Location *node_to_remove = NULL;
+            int max_edges = -1;
+            for (auto node : bgfn-> inter_graph) {
+                if (node.second.size() < k) {
+                    node_to_remove = node.first;
+                    break;
+                }
+                if (node.second.size() > max_edges) {
+                    node_to_remove = node.first;
+                    max_edges = node.second.size();
+                }
+            }
+            for (auto node_to : bgfn-> inter_graph[node_to_remove]) {
+                bgfn-> inter_graph[node_to].erase(node_to_remove);
+            }
+            nodes_removed.push(node_to_remove);
+            bgfn-> inter_graph.erase(node_to_remove);
+        }
+        // Reconstruct the graph
+        while (!nodes_removed.empty()) {
+            Location *curr_node = nodes_removed.top();
+            nodes_removed.pop();
+            // remaining for registers
+        }
+    }
 }
 
 /*To be implemented.*/

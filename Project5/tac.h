@@ -38,7 +38,7 @@ class Mips;
     // with name "num", segment fpRelative, and offset -8. 
  
 typedef enum {fpRelative, gpRelative} Segment;
-typedef std::map<Instruction*, std::set<Instruction*> > INTERFERENCEGRAPH;
+typedef std::map<Location*, std::set<Location*> > INTERFERENCEGRAPH;
 
 class Location
 {
@@ -92,11 +92,11 @@ class Instruction {
     List<Instruction*> successors;  // can be changed to std::list due to the new operation in constructor of children classes ???
 	List<Location*> liveVariables;
     // type of elements need to be Location* ???
-    std::set<Instruction*> in_set;
-    std::set<Instruction*> intemp_set;
-    std::set<Instruction*> out_set;
-    std::set<Instruction*> kill_set;
-    std::set<Instruction*> gen_set;
+    std::set<Location*> in_set;
+    std::set<Location*> intemp_set;
+    std::set<Location*> out_set;
+    std::set<Location*> kill_set;
+    std::set<Location*> gen_set;
     bool Analyze();
     /*Abstract function for all children class. Uncomment and implement for the other children classes*/
     //virtual void AnalyzeSpecific() = 0;

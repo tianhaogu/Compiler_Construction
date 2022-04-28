@@ -13,6 +13,7 @@
 #include <utility>
 #include <set>
 #include <map>
+#include <stack>
 #include "list.h"
 #include "hashtable.h"
 #include "tac.h"
