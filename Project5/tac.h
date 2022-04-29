@@ -193,8 +193,7 @@ class Store: public Instruction {
   public:
     Store(Location *d, Location *s, int offset = 0);
     void EmitSpecific(Mips *mips);
-    void SetKill() { kill_set.insert(dst); }
-    void SetGen() { gen_set.insert(src); }
+    void SetGen() { gen_set.insert(src); gen_set.insert(dst); }
 };
 
 class BinaryOp: public Instruction {

@@ -2,70 +2,88 @@
 	  .text
 	  .align 2
 	  .globl main
-  _Vegetable.Eat:
+  main:
+	# BeginFunc 28
+	  subu $sp, $sp, 8	# decrement sp to make space to save ra, fp
+	  sw $fp, 8($sp)	# save fp
+	  sw $ra, 4($sp)	# save ra
+	  addiu $fp, $sp, 8	# set up new fp
+	  subu $sp, $sp, 28	# decrement sp to make space for locals/temps
+	# _tmp0 = 8
+	  li $a0, 8		# load constant value 8 into $a0
+	  sw $a0, -12($fp)	# spill _tmp0 from $a0 to $fp-12
+	# PushParam _tmp0
+	  subu $sp, $sp, 4	# decrement sp to make space for param
+	  sw $a0, 4($sp)	# copy param value to stack
+	# _tmp1 = LCall _Alloc
+	  jal _Alloc         	# jump to function
+	# PopParams 4
+	  add $sp, $sp, 4	# pop params off stack
+	  move $a1, $v0		# copy function return value from $v0
+	# _tmp2 = Cow
+	  la $a0, Cow	# load label
+	# *(_tmp1) = _tmp2
+	  sw $a0, 0($a1) 	# store with offset
+	# betsy = _tmp1
+	  move $a2, $a1	# copy regs
+	# _tmp3 = 122
+	  li $a1, 122		# load constant value 122 into $a1
+	# _tmp4 = *(betsy)
+	  lw $a0, 0($a2) 	# load with offset
+	# _tmp5 = *(_tmp4)
+	  lw $v0, 0($a0) 	# load with offset
+	  sw $v0, -32($fp)	# spill _tmp5 from $v0 to $fp-32
+	  sw $a2, -8($fp)	# spill betsy from $a2 to $fp-8
+	  sw $a1, -24($fp)	# spill _tmp3 from $a1 to $fp-24
+	# PushParam _tmp3
+	  subu $sp, $sp, 4	# decrement sp to make space for param
+	  sw $a1, 4($sp)	# copy param value to stack
+	# PushParam betsy
+	  subu $sp, $sp, 4	# decrement sp to make space for param
+	  sw $a2, 4($sp)	# copy param value to stack
+	# ACall _tmp5
+	  lw $v0, -32($fp)	# fill _tmp5 to $v0 from $fp-32
+	  jalr $v0            	# jump to function
+	# PopParams 8
+	  add $sp, $sp, 8	# pop params off stack
+	# EndFunc
+	# (below handles reaching end of fn body with no explicit return)
+	  move $sp, $fp		# pop callee frame off stack
+	  lw $ra, -4($fp)	# restore saved ra
+	  lw $fp, 0($fp)	# restore saved fp
+	  jr $ra		# return from function
+  _Cow.Init:
 	# BeginFunc 12
 	  subu $sp, $sp, 8	# decrement sp to make space to save ra, fp
 	  sw $fp, 8($sp)	# save fp
 	  sw $ra, 4($sp)	# save ra
 	  addiu $fp, $sp, 8	# set up new fp
 	  subu $sp, $sp, 12	# decrement sp to make space for locals/temps
-	  lw $a0, 4($fp)	# fill this to $a0 from $fp+4
-	# _tmp0 = 5
-	  li $a2, 5		# load constant value 5 into $a2
-	# _tmp1 = 2
-	  li $a1, 2		# load constant value 2 into $a1
-	# _tmp2 = _tmp0 % _tmp1
-	  rem $a0, $a2, $a1	
-	# *(this + 4) = _tmp2
-	  sw $a0, 4($a0) 	# store with offset
-	# EndFunc
-	# (below handles reaching end of fn body with no explicit return)
-	  move $sp, $fp		# pop callee frame off stack
-	  lw $ra, -4($fp)	# restore saved ra
-	  lw $fp, 0($fp)	# restore saved fp
-	  jr $ra		# return from function
-	# VTable for class Vegetable
-	  .data
-	  .align 2
-	  Vegetable:		# label for class Vegetable vtable
-	  .word _Vegetable.Eat
-	  .text
-  main:
-	# BeginFunc 24
-	  subu $sp, $sp, 8	# decrement sp to make space to save ra, fp
-	  sw $fp, 8($sp)	# save fp
-	  sw $ra, 4($sp)	# save ra
-	  addiu $fp, $sp, 8	# set up new fp
-	  subu $sp, $sp, 24	# decrement sp to make space for locals/temps
-	# _tmp3 = 8
-	  li $a0, 8		# load constant value 8 into $a0
-	  sw $a0, -12($fp)	# spill _tmp3 from $a0 to $fp-12
-	# PushParam _tmp3
+	# _tmp6 = 1
+	  li $a0, 1		# load constant value 1 into $a0
+	# *(this + 4) = _tmp6
+	  sw $a0, 4($a1) 	# store with offset
+	# _tmp7 = *(this + 4)
+	  lw $a0, 4($a1) 	# load with offset
+	  sw $a0, -12($fp)	# spill _tmp7 from $a0 to $fp-12
+	# PushParam _tmp7
 	  subu $sp, $sp, 4	# decrement sp to make space for param
 	  sw $a0, 4($sp)	# copy param value to stack
-	# _tmp4 = LCall _Alloc
-	  jal _Alloc         	# jump to function
+	# LCall _PrintInt
+	  jal _PrintInt      	# jump to function
 	# PopParams 4
 	  add $sp, $sp, 4	# pop params off stack
-	  move $a1, $v0		# copy function return value from $v0
-	# _tmp5 = Vegetable
-	  la $a0, Vegetable	# load label
-	# *(_tmp4) = _tmp5
-	  sw $a0, 0($a1) 	# store with offset
-	# veggies = _tmp4
-	  move $a2, $a1	# copy regs
-	# _tmp6 = *(veggies)
-	  lw $a0, 0($a2) 	# load with offset
-	# _tmp7 = *(_tmp6)
-	  lw $v0, 0($a0) 	# load with offset
-	  sw $v0, -28($fp)	# spill _tmp7 from $v0 to $fp-28
-	  sw $a2, -8($fp)	# spill veggies from $a2 to $fp-8
-	# PushParam veggies
+	# _tmp8 = "\n"
+	  .data			# create string constant marked with label
+	  _string1: .asciiz "\n"
+	  .text
+	  la $a0, _string1	# load label
+	  sw $a0, -16($fp)	# spill _tmp8 from $a0 to $fp-16
+	# PushParam _tmp8
 	  subu $sp, $sp, 4	# decrement sp to make space for param
-	  sw $a2, 4($sp)	# copy param value to stack
-	# ACall _tmp7
-	  lw $v0, -28($fp)	# fill _tmp7 to $v0 from $fp-28
-	  jalr $v0            	# jump to function
+	  sw $a0, 4($sp)	# copy param value to stack
+	# LCall _PrintString
+	  jal _PrintString   	# jump to function
 	# PopParams 4
 	  add $sp, $sp, 4	# pop params off stack
 	# EndFunc
@@ -74,6 +92,12 @@
 	  lw $ra, -4($fp)	# restore saved ra
 	  lw $fp, 0($fp)	# restore saved fp
 	  jr $ra		# return from function
+	# VTable for class Cow
+	  .data
+	  .align 2
+	  Cow:		# label for class Cow vtable
+	  .word _Cow.Init
+	  .text
   _PrintInt:
 	  subu $sp, $sp, 8	# decrement sp to make space to save ra,fp
 	  sw $fp, 8($sp)	# save fp

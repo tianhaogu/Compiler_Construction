@@ -403,6 +403,7 @@ void CodeGenerator::VarLiveAnalysis() {
             for (auto it : code-> Nth(i)-> in_set) {
                 code-> Nth(i)-> liveVariables.Append(it);
             }
+            code-> Nth(i)-> liveVariables.Unique();
         }
     //  }
 }
