@@ -1,0 +1,18 @@
+
+class Vegetable {
+    int color;
+
+    void Eat()
+    {
+       color = 5 % 2;
+    }
+
+}
+
+
+void main()
+{
+   Vegetable veggies;
+   veggies = New(Vegetable);
+   veggies.Eat();
+}

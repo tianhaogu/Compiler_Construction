@@ -87,7 +87,7 @@ depend:
 	$(CC) -MM -MG $(SRCS) >> Makefile
 
 clean:
-	rm -f $(JUNK) y.output $(PRODUCTS)
+	rm -f $(JUNK) y.output $(PRODUCTS) samples/test_*.out
 
 # DO NOT DELETE
 

@@ -86,6 +86,12 @@ void Load::EmitSpecific(Mips *mips) {
     mips->EmitLoad(dst, src, offset);
 }
 
+LoadThis::LoadThis(Location *s) : src(s) {
+    Assert(src != NULL);
+}
+
+void LoadThis::EmitSpecific(Mips *mips) {
+}
 
 
 Store::Store(Location *d, Location *s, int off) : dst(d), src(s), offset(off) {
@@ -164,6 +170,11 @@ BeginFunc::BeginFunc() {
     frameSize = -555; // used as sentinel to recognized unassigned value
 }
 
+BeginFunc::BeginFunc(bool IsMethodDecl) : IsMethodDecl(IsMethodDecl) {
+    sprintf(printed,"BeginFunc (unassigned)");
+    frameSize = -555; // used as sentinel to recognized unassigned value
+}
+
 void BeginFunc::SetFrameSize(int numBytesForAllLocalsAndTemps) {
     frameSize = numBytesForAllLocalsAndTemps; 
     sprintf(printed,"BeginFunc %d", frameSize);
@@ -212,15 +223,36 @@ void PopParams::EmitSpecific(Mips *mips) {
     mips->EmitPopParams(numBytes);
 } 
 
+void CallerSave::EmitSpecific(Mips *mips) {
+    for (int i = 0; i < this->liveVariables.NumElements(); ++i) {
+        mips->SaveCaller(this->liveVariables.Nth(i));
+    }
+}
+
+CallerLoad::CallerLoad(Location *d, Location *t) : dst(d), th(t) {}
+
+void CallerLoad::EmitSpecific(Mips *mips) {
 
 
+
+    for (int i = 0; i < this->liveVariables.NumElements(); ++i) {
+        mips->RestoreCaller(this->liveVariables.Nth(i));
+    }
+    mips->EmitCallInstrReturn(dst);
+}
 
 LCall::LCall(const char *l, Location *d) : label(strdup(l)), dst(d) {
     sprintf(printed, "%s%sLCall %s", dst? dst->GetName(): "", dst?" = ":"", label);
 }
 
 void LCall::EmitSpecific(Mips *mips) {
+    // for (int i = 0; i < this->liveVariables.NumElements(); ++i) {
+    //     mips->SaveCaller(this->liveVariables.Nth(i));
+    // }
     mips->EmitLCall(dst, label);
+    // for (int i = 0; i < this->liveVariables.NumElements(); ++i) {
+    //     mips->RestoreCaller(this->liveVariables.Nth(i));
+    // }
 }
 
 
@@ -231,7 +263,13 @@ ACall::ACall(Location *ma, Location *d) : dst(d), methodAddr(ma) {
 }
 
 void ACall::EmitSpecific(Mips *mips) {
+    // for (int i = 0; i < this->liveVariables.NumElements(); ++i) {
+    //     mips->SaveCaller(this->liveVariables.Nth(i));
+    // }
     mips->EmitACall(dst, methodAddr);
+    // for (int i = 0; i < this->liveVariables.NumElements(); ++i) {
+    //     mips->RestoreCaller(this->liveVariables.Nth(i));
+    // }
 } 
 
 

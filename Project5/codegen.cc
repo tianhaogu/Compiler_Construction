@@ -79,6 +79,11 @@ Location *CodeGenerator::GenLoad(Location *ref, int offset) {
     return result;
 }
 
+Location *CodeGenerator::GenThis(Location *ref) {
+    code->Append(new LoadThis(ref));
+    return ref;
+}
+
 void CodeGenerator::GenStore(Location *dst,Location *src, int offset) {
     code->Append(new Store(dst, src, offset));
 }
@@ -109,14 +114,21 @@ void CodeGenerator::GenReturn(Location *val) {
 
 
 BeginFunc *CodeGenerator::GenBeginFunc(FnDecl *fn) {
-    BeginFunc *result = new BeginFunc;
+    BeginFunc *result = new BeginFunc(fn->IsMethodDecl());
     code->Append(insideFn = result);
     List<VarDecl*> *formals = fn->GetFormals();
     int start = OffsetToFirstParam;
-    if (fn->IsMethodDecl()) start += VarSize;
+    Location *temp = NULL;
+    if (fn->IsMethodDecl()) {
+        // temp = new Location(fpRelative, start, "this");
+
+        start += VarSize;
+    }
     for (int i = 0; i < formals->NumElements(); i++)
         formals->Nth(i)->rtLoc = new Location(fpRelative, i*VarSize + start, formals->Nth(i)->GetName());
     curStackOffset = OffsetToFirstLocal;
+
+    GenCallerLoad(NULL, temp);
     return result;
 }
 
@@ -136,6 +148,14 @@ void CodeGenerator::GenPopParams(int numBytesOfParams) {
         code->Append(new PopParams(numBytesOfParams));
 }
 
+void CodeGenerator::GenCallerSave() {
+    code->Append(new CallerSave());
+}
+
+void CodeGenerator::GenCallerLoad(Location *result, Location *t) {
+    code->Append(new CallerLoad(result, t));
+}
+
 Location *CodeGenerator::GenLCall(const char *label, bool fnHasReturnValue) {
     Location *result = fnHasReturnValue ? GenTempVar() : NULL;
     code->Append(new LCall(label, result));
@@ -143,10 +163,16 @@ Location *CodeGenerator::GenLCall(const char *label, bool fnHasReturnValue) {
 }
 
 Location *CodeGenerator::GenFunctionCall(const char *fnLabel, List<Location*> *args, bool hasReturnValue) {
+    GenCallerSave();
+
+
     for (int i = args->NumElements()-1; i >= 0; i--) // push params right to left
         GenPushParam(args->Nth(i));
     Location *result = GenLCall(fnLabel, hasReturnValue);
     GenPopParams(args->NumElements()*VarSize);
+
+
+    GenCallerLoad(result);
     return result;
 }
 
@@ -157,11 +183,18 @@ Location *CodeGenerator::GenACall(Location *fnAddr, bool fnHasReturnValue) {
 }
  
 Location *CodeGenerator::GenMethodCall(Location *rcvr, Location *meth, List<Location*> *args, bool fnHasReturnValue) {
+    GenCallerSave();
+
+
     for (int i = args->NumElements()-1; i >= 0; i--)
         GenPushParam(args->Nth(i));
     GenPushParam(rcvr);	// hidden "this" parameter
+    
     Location *result= GenACall(meth, fnHasReturnValue);
     GenPopParams((args->NumElements()+1)*VarSize);
+
+
+    GenCallerLoad(result);
     return result;
 }
 
@@ -185,6 +218,8 @@ Location *CodeGenerator::GenBuiltInCall(BuiltIn bn,Location *arg1, Location *arg
     struct _builtin *b = &builtins[bn];
     Location *result = NULL;
 
+    GenCallerSave();
+
     if (b->hasReturn) result = GenTempVar();
                 // verify appropriate number of non-NULL arguments given
     Assert((b->numArgs == 0 && !arg1 && !arg2)
@@ -194,6 +229,8 @@ Location *CodeGenerator::GenBuiltInCall(BuiltIn bn,Location *arg1, Location *arg
     if (arg1) code->Append(new PushParam(arg1));
     code->Append(new LCall(b->label, result));
     GenPopParams(VarSize*b->numArgs);
+
+    GenCallerLoad(result);
     return result;
 }
 
@@ -298,53 +335,56 @@ void CodeGenerator::ConstructCFG() {
             label_table-> Enter(label-> GetLabel(), code-> Nth(i + 1));
         }
     }
-    bool isInFunction = false;
+    // bool isInFunction = false;
     int function_begin = -1;
-    for (int i = 0; i < code-> NumElements() - 1; i++) {
-        if (isInFunction) {
-            if (dynamic_cast<EndFunc*> (code-> Nth(i))) {
-                isInFunction = false;
-                function_positions-> Append(std::make_pair(function_begin, i));
-            }
-            else if (dynamic_cast<Goto*> (code-> Nth(i))) {
+    for (int i = 0; i < code-> NumElements(); i++) {
+        // if (isInFunction) {
+            if (dynamic_cast<EndFunc*> (code-> Nth(i)) || dynamic_cast<Return*> (code-> Nth(i))) {
+                // isInFunction = false;
+                // function_positions-> Append(std::make_pair(function_begin, i));
+            } else if (dynamic_cast<Goto*> (code-> Nth(i))) {
                 Goto *gt = dynamic_cast<Goto*> (code-> Nth(i));
                 Instruction *goto_tac = label_table-> Lookup(gt-> GetLabel());
-                gt-> successors.Append(goto_tac);
-            }
-            else if (dynamic_cast<IfZ*> (code-> Nth(i))) {
+                code-> Nth(i)-> successors.Append(goto_tac);
+            } else if (dynamic_cast<IfZ*> (code-> Nth(i))) {
                 IfZ *ifz = dynamic_cast<IfZ*> (code-> Nth(i));
                 Instruction *ifz_tac = label_table-> Lookup(ifz-> GetLabel());
-                ifz-> successors.Append(ifz_tac);
-                ifz-> successors.Append(code-> Nth(i + 1));  // need to consider???
-            }
-            else {
+                code-> Nth(i)-> successors.Append(ifz_tac);
+                if (i != code-> NumElements() - 1)
+                    code-> Nth(i)-> successors.Append(code-> Nth(i + 1));  // need to consider???
+            } else {
                 Instruction *inst = code-> Nth(i);
-                inst-> successors.Append(code-> Nth(i + 1));
+                if (i != code-> NumElements() - 1)
+                    code-> Nth(i)-> successors.Append(code-> Nth(i + 1));
             }
-        }
-        else if (dynamic_cast<BeginFunc*> (code-> Nth(i))) {
-            isInFunction = true;
-            function_begin = i;
-            BeginFunc *bgfn = dynamic_cast<BeginFunc*> (code-> Nth(i));
-            bgfn-> successors.Append(code-> Nth(i + 1));
-        }
+        // }
+        // else if (dynamic_cast<BeginFunc*> (code-> Nth(i))) {
+        //     isInFunction = true;
+        //     function_begin = i;
+        //     BeginFunc *bgfn = dynamic_cast<BeginFunc*> (code-> Nth(i));
+        //     bgfn-> successors.Append(code-> Nth(i + 1));
+        // }
     }
 }
 
 void CodeGenerator::VarLiveAnalysis() {
-    for (int p = 0; p < function_positions-> NumElements(); p++) {  // loop over functions one by one
+    // for (int p = 0; p < function_positions-> NumElements(); p++) {  // loop over functions one by one
         bool changed = true;
         while (changed) {
             changed = false;
-            for (int i = function_positions-> Nth(p).second; i >= function_positions-> Nth(p).first; i--) {  // for each TAC in CFG
+            for (int i = code-> NumElements() - 1; i >= 0; i--) {  // for each TAC in CFG
                 Instruction *curr_tac = code-> Nth(i);
                 // OUT[TAC] = Union(IN[SUCC(TAC)])
                 for (int j = 0; j < curr_tac-> successors.NumElements(); j++) {
                     curr_tac-> out_set.insert(curr_tac-> successors.Nth(j)-> in_set.begin(), curr_tac-> successors.Nth(j)-> in_set.end());
                 }
                 // IN'[TAC] = OUT[TAC] - KILL(TAC) + GEN(TAC)
-                curr_tac-> SetGen();
                 curr_tac-> SetKill();
+                if (dynamic_cast<BeginFunc *>(curr_tac)) {
+                    curr_tac-> SetGen();
+                } else {
+                    curr_tac-> SetGen();
+                }
                 curr_tac-> intemp_set = curr_tac-> out_set;
                 for (auto kill_item : curr_tac-> kill_set) {
                     curr_tac-> intemp_set.erase(kill_item);
@@ -357,81 +397,110 @@ void CodeGenerator::VarLiveAnalysis() {
                 }
             }
         }
-    }
+        for (int i = code-> NumElements() - 1; i >= 0; i--) {
+            code-> Nth(i)-> in_set.insert(code-> Nth(i)-> out_set.begin(), code-> Nth(i)-> out_set.end());
+            code-> Nth(i)-> liveVariables.Clear();
+            for (auto it : code-> Nth(i)-> in_set) {
+                code-> Nth(i)-> liveVariables.Append(it);
+            }
+        }
+    //  }
 }
 
 void CodeGenerator::ConstructRIG() {
-    for (int p = 0; p < function_positions-> NumElements(); p++) {
-        BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));
-        for (int i = function_positions-> Nth(p).first; i <= function_positions-> Nth(p).second; i++) {
+    // for (int p = 0; p < function_positions-> NumElements(); p++) {
+        // BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));
+        for (int i = 0; i < code-> NumElements(); i++) {
             Instruction *curr_tac = code-> Nth(i);
             for (auto in_item_src : curr_tac-> in_set) {
-                if (bgfn-> inter_graph.find(in_item_src) == bgfn-> inter_graph.end()) {
-                    bgfn-> inter_graph[in_item_src] = {};
+                if (inter_graph.find(in_item_src) == inter_graph.end()) {
+                    inter_graph[in_item_src] = {};
                 }
                 for (auto in_item_dst : curr_tac-> in_set) {
                     if (in_item_src != in_item_dst) {
-                        bgfn-> inter_graph[in_item_src].insert(in_item_dst);
+                        inter_graph[in_item_src].insert(in_item_dst);
                         in_item_src-> AddInterference(in_item_dst);  // use the provided method again
                     }
                 }
             }
-            // Do the same thing for the union of out_set and kill_set, but don't know why ???
-            // for (auto kill_item : curr_tac-> kill_set) {
-            //     if (bgfn-> inter_graph.find(kill_item) == bgfn-> inter_graph.end()) {
-            //         bgfn-> inter_graph[kill_item] = {};
+            // // Do the same thing for the union of out_set and kill_set, but don't know why ???
+            // for (auto kill_item_src : curr_tac-> kill_set) {
+            //     if (bgfn-> inter_graph.find(kill_item_src) == bgfn-> inter_graph.end()) {
+            //         bgfn-> inter_graph[kill_item_src] = {};
             //     }
-            //     for (auto out_item : curr_tac-> out_set) {
-            //         if (kill_item != out_item) {
-            //             bgfn-> inter_graph[out_item].insert(kill_item);
-            //             bgfn-> inter_graph[kill_item].insert(out_item);
-            //             out_item-> AddInterference(kill_item);  // use the provided method again
-            //             kill_item-> AddInterference(out_item);  // use the provided method again
+            //     for (auto kill_item_dst : curr_tac-> kill_set) {
+            //         if (kill_item_src != kill_item_dst) {
+            //             bgfn-> inter_graph[kill_item_src].insert(kill_item_dst);
+            //             kill_item_src-> AddInterference(kill_item_dst);  // use the provided method again
+            //         }
+            //     }
+            //     for (auto out_item_dst : curr_tac-> out_set) {
+            //         if (kill_item_src != out_item_dst) {
+            //             bgfn-> inter_graph[kill_item_src].insert(out_item_dst);
+            //             kill_item_src-> AddInterference(out_item_dst);  // use the provided method again
+            //         }
+            //     }
+            // }
+            // // Do the same thing for the union of out_set and kill_set, but don't know why ???
+            // for (auto out_item_src : curr_tac-> out_set) {
+            //     if (bgfn-> inter_graph.find(out_item_src) == bgfn-> inter_graph.end()) {
+            //         bgfn-> inter_graph[out_item_src] = {};
+            //     }
+            //     for (auto kill_item_dst : curr_tac-> kill_set) {
+            //         if (out_item_src != kill_item_dst) {
+            //             bgfn-> inter_graph[out_item_src].insert(kill_item_dst);
+            //             out_item_src-> AddInterference(kill_item_dst);  // use the provided method again
+            //         }
+            //     }
+            //     for (auto out_item_dst : curr_tac-> out_set) {
+            //         if (out_item_src != out_item_dst) {
+            //             bgfn-> inter_graph[out_item_src].insert(out_item_dst);
+            //             out_item_src-> AddInterference(out_item_dst);  // use the provided method again
             //         }
             //     }
             // }
         }
-    }
+    // }
 }
 
-void CodeGenerator::ColorGraph() {
-    int k = 10000;  // Mips::Register::NumRegs;  // try
-    for (int p = 0; p < function_positions-> NumElements(); p++) {
-        std::stack<Location*> nodes_removed;
-        BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));
-        // 1. Remove the nodes
-        while (bgfn-> inter_graph.size() > 0) {
-            Location *node_to_remove = NULL;
-            int max_edges = -1;
-            for (auto node : bgfn-> inter_graph) {
-                if (node.second.size() < k) {
-                    node_to_remove = node.first;
-                    break;
-                }
-                if (node.second.size() > max_edges) {
-                    node_to_remove = node.first;
-                    max_edges = node.second.size();
-                }
-            }
-            for (auto node_to : bgfn-> inter_graph[node_to_remove]) {
-                bgfn-> inter_graph[node_to].erase(node_to_remove);
-            }
-            nodes_removed.push(node_to_remove);
-            bgfn-> inter_graph.erase(node_to_remove);
-        }
-        // Reconstruct the graph
-        while (!nodes_removed.empty()) {
-            Location *curr_node = nodes_removed.top();
-            nodes_removed.pop();
-            // remaining for registers
-        }
-    }
-}
+// void CodeGenerator::ColorGraph() {
+//     int k = 10000;  // Mips::Register::NumRegs;  // try
+//     for (int p = 0; p < function_positions-> NumElements(); p++) {
+//         std::stack<Location*> nodes_removed;
+//         BeginFunc* bgfn = dynamic_cast<BeginFunc*> (code-> Nth(function_positions-> Nth(p).first));
+//         // 1. Remove the nodes
+//         while (bgfn-> inter_graph.size() > 0) {
+//             Location *node_to_remove = NULL;
+//             int max_edges = -1;
+//             for (auto node : bgfn-> inter_graph) {
+//                 if (node.second.size() < k) {
+//                     node_to_remove = node.first;
+//                     break;
+//                 }
+//                 if (node.second.size() > max_edges) {
+//                     node_to_remove = node.first;
+//                     max_edges = node.second.size();
+//                 }
+//             }
+//             for (auto node_to : bgfn-> inter_graph[node_to_remove]) {
+//                 bgfn-> inter_graph[node_to].erase(node_to_remove);
+//             }
+//             nodes_removed.push(node_to_remove);
+//             bgfn-> inter_graph.erase(node_to_remove);
+//         }
+//         // Reconstruct the graph
+//         while (!nodes_removed.empty()) {
+//             Location *curr_node = nodes_removed.top();
+//             nodes_removed.pop();
+//             // remaining for registers
+//         }
+//     }
+// }
 
 /*To be implemented.*/
 void CodeGenerator::LivenessAnalysis() {
     this-> ConstructCFG();
     this-> VarLiveAnalysis();
     this-> ConstructRIG();
-    this-> ColorGraph();
+    // this-> ColorGraph();
 }

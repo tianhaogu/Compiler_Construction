@@ -23,6 +23,8 @@ class FnDecl;
 typedef enum { Alloc, ReadLine, ReadInteger, StringEqual,
                PrintInt, PrintString, PrintBool, Halt, NumBuiltIns } BuiltIn;
 
+typedef std::map<Location*, std::set<Location*> > INTERFERENCEGRAPH;
+
 class CodeGenerator {
   private:
     List<Instruction*> *code;
@@ -30,6 +32,8 @@ class CodeGenerator {
     BeginFunc *insideFn;
     Hashtable<Instruction*> *label_table;  // used to construct the CFG
     List<std::pair<int, int> > *function_positions;  // record the start and end position of functions in the code list
+
+    INTERFERENCEGRAPH inter_graph;
 
   public:
     // Here are some class constants to remind you of the offsets
@@ -93,6 +97,8 @@ class CodeGenerator {
     // negative number of bytes. If not given, 0 is assumed.
     Location *GenLoad(Location *addr, int offset = 0);
 
+    Location *GenThis(Location *addr);
+
     
     // Generates Tac instructions to perform one of the binary ops
     // identified by string name, such as "+" or "==".  Returns a
@@ -111,6 +117,10 @@ class CodeGenerator {
     // clean up after an ACall or LCall instruction. All parameters
     // are removed with one adjustment of the stack pointer.
     void GenPopParams(int numBytesOfParams);
+
+    void GenCallerSave();
+
+    void GenCallerLoad(Location *result, Location *t=NULL);
 
     // Generates the Tac instructions for a LCall, a jump to
     // a compile-time label. The params to the target routine

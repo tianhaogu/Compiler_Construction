@@ -26,7 +26,7 @@
 #include "list.h" // for VTable
 #include <set>
 #include <map>
-#include "mips.h"
+// #include "mips.h"
 class Mips;
 
 
@@ -39,7 +39,6 @@ class Mips;
     // with name "num", segment fpRelative, and offset -8. 
  
 typedef enum {fpRelative, gpRelative} Segment;
-typedef std::map<Location*, std::set<Location*> > INTERFERENCEGRAPH;
 
 class Location
 {
@@ -131,6 +130,7 @@ class ACall;
 class VTable;
 
 
+typedef std::map<Location*, std::set<Location*> > INTERFERENCEGRAPH;
 
 
 class LoadConstant: public Instruction {
@@ -176,6 +176,14 @@ class Load: public Instruction {
     Load(Location *dst, Location *src, int offset = 0);
     void EmitSpecific(Mips *mips);
     void SetKill() { kill_set.insert(dst); }
+    void SetGen() { gen_set.insert(src); }
+};
+
+class LoadThis: public Instruction {
+    Location *src;
+  public:
+    LoadThis(Location *src);
+    void EmitSpecific(Mips *mips);
     void SetGen() { gen_set.insert(src); }
 };
 
@@ -234,12 +242,15 @@ class IfZ: public Instruction {
 
 class BeginFunc: public Instruction {
     int frameSize;
+    bool IsMethodDecl;
   public:
     BeginFunc();
+    BeginFunc(bool IsMethodDecl);
     // used to backpatch the instruction with frame size once known
     void SetFrameSize(int numBytesForAllLocalsAndTemps);
     void EmitSpecific(Mips *mips);
-    INTERFERENCEGRAPH inter_graph;
+    void SetGen() { return; }
+    // INTERFERENCEGRAPH inter_graph;
 };
 
 class EndFunc: public Instruction {
@@ -253,7 +264,7 @@ class Return: public Instruction {
   public:
     Return(Location *val);
     void EmitSpecific(Mips *mips);
-    void SetGen() { gen_set.insert(val); }
+    void SetGen() { if (val) gen_set.insert(val); }
 };   
 
 class PushParam: public Instruction {
@@ -268,6 +279,21 @@ class PopParams: public Instruction {
     int numBytes;
   public:
     PopParams(int numBytesOfParamsToRemove);
+    void EmitSpecific(Mips *mips);
+}; 
+
+class CallerSave: public Instruction {
+
+  public:
+
+    void EmitSpecific(Mips *mips);
+}; 
+
+class CallerLoad: public Instruction {
+    Location *dst;
+    Location *th;
+  public:
+    CallerLoad(Location *d, Location *t);
     void EmitSpecific(Mips *mips);
 }; 
 

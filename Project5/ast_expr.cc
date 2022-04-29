@@ -215,8 +215,11 @@ Type* This::CheckAndComputeResultType() {
 static Location *ThisLocation = new Location(fpRelative, 4, "this");
 
  void This::Emit(CodeGenerator *cg) {
-   if (!result)
-    result = ThisLocation;
+   if (!result) {
+    result = cg->GenThis(ThisLocation);
+   } else {
+    cg->GenThis(result);
+   }
  }
  
    
